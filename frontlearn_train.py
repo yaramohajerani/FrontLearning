@@ -62,11 +62,10 @@ def train_model(parameters):
     n_epochs = np.int(parameters['EPOCHS'])
     n_layers = np.int(parameters['LAYERS_DOWN'])
     n_init = np.int(parameters['N_INIT'])
-    drop = False
+    drop = np.float(parameters['DROPOUT'])
     drop_str = ''
-    if parameters['DROPOUT'] in ['Y','y']:
-        drop = True
-        drop_str = '_wDropout'
+    if drop>0:
+        drop_str = '_w%.1fdrop'%drop
     #-- load images
     data = load_train_data()
 
