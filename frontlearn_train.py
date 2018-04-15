@@ -57,23 +57,32 @@ def load_train_data():
     return {'trn_img':train_img,'trn_lbl':train_lbl,'tst_img':test_img,\
         'trn_names':trn_files,'tst_names':tst_files}
 
-def main():
+def train_model(parameters):
+    n_batch = np.int(parameters['BATCHES'])
+    n_epochs = np.int(parameters['EPOCHS'])
+    n_layers = np.int(parameters['LAYERS_DOWN'])
+    n_init = np.int(parameters['N_INIT'])
+    drop = False
+    drop_str = ''
+    if parameters['DROPOUT'] in ['Y','y']:
+        drop = True
+        drop_str = '_wDropout'
     #-- load images
     data = load_train_data()
-    train_img = data['trn_img']
-    train_lbl = data['trn_lbl']
-    test_img = data['tst_img']
 
-    n,height,width,channels=train_img.shape
+    n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
 
     #-- import mod
-    unet = imp.load_source('unet_model', os.path.join(ddir,'frontlearn_unet.py'))
-    model = unet.unet_model(height,width,channels)
+    unet = imp.load_source('unet_model', os.path.join(ddir,'frontlearn_unet_dynamic.py'))
+    model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
+        n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'frontlearn_weights.h5')
+    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s.h5'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str))
+
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
         print('Check point exists; loading model from file.')
@@ -88,25 +97,61 @@ def main():
         model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
             verbose=1, save_best_only=True)
         #-- now fit the model
-        model.fit(train_img, train_lbl, batch_size=10, epochs=50, verbose=1,\
+        model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
             validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
 
     print('Model is trained. Running on test data...')
 
-    #-- Now test the model on both the test data and teh train data
-    out_imgs = model.predict(train_img, batch_size=1, verbose=1)
-    print out_imgs.shape
-    #-- save the test image
-    for i in range(len(out_imgs)):
-        im = image.array_to_img(out_imgs[i])
-        im.save(os.path.join(trn_dir,'output/%s'%data['trn_names'][i]))
+    #-- make dictionaries for looping through train and test sets
+    in_img = {}
+    in_img['train'] = data['trn_img']
+    in_img['test'] = data['tst_img']
+    outdir = {}
+    outdir['train'] = trn_dir
+    outdir['test'] = tst_dir
+    names = {}
+    names['train'] = data['trn_names']
+    names['test'] = data['tst_names']
+    #-- Now test the model on both the test data and the train data
+    for t in ['train','test']:
+        out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
+        print out_imgs.shape
+        #-- make output directory
+        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s'\
+            %(n_batch,n_epochs,n_tot,n_init,drop_str)
+        if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
+            os.mkdir(os.path.join(outdir[t],out_subdir))
+        #-- save the test image
+        for i in range(len(out_imgs)):
+            im = image.array_to_img(out_imgs[i])
+            im.save(os.path.join(outdir[t],out_subdir,'%s'%names[t][i]))
 
-    out_imgs = model.predict(test_img, batch_size=1, verbose=1)
-    print out_imgs.shape
-    #-- save the test image
-    for i in range(len(out_imgs)):
-        im = image.array_to_img(out_imgs[i])
-        im.save(os.path.join(tst_dir,'output/%s'%data['tst_names'][i]))
+#-- main function to get parameters and pass them along to fitting function
+def main():
+    if (len(sys.argv) == 1):
+        sys.exit('You need to input at least one parameter file to set run configurations.')
+    else:
+        #-- Input Parameter Files (sys.argv[0] is the python code)
+        input_files = sys.argv[1:]
+        #-- for each input parameter file
+        for file in input_files:
+            #-- keep track of progress
+            print(os.path.basename(file))
+            #-- variable with parameter definitions
+            parameters = {}
+            #-- Opening parameter file and assigning file ID number (fid)
+            fid = open(file, 'r')
+            #-- for each line in the file will extract the parameter (name and value)
+            for fileline in fid:
+                #-- Splitting the input line between parameter name and value
+                part = fileline.split()
+                #-- filling the parameter definition variable
+                parameters[part[0]] = part[1]
+            #-- close the parameter file
+            fid.close()
+
+            #-- pass parameters to training function
+            train_model(parameters)
 
 if __name__ == '__main__':
     main()
