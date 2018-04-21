@@ -36,6 +36,7 @@ def unet_model(height=0,width=0,channels=1,n_init=12,n_layers=2,drop=0):
     #---------------------------------------------
     upsampled_c = {}
     up = {}
+    print('Max Number of Convlution Filters: ',n_init*i)
     while count>1:
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
@@ -54,6 +55,7 @@ def unet_model(height=0,width=0,channels=1,n_init=12,n_layers=2,drop=0):
     #-- do one final sigmoid convolution into just 1 final channel (None,h,w,1)
     i += 1
     c[i] = kl.Conv2D(1,1,activation='sigmoid')(c[i-1])
+    print('Total Number of layers: ',i)
 
     #-- make model
     model = km.Model(input=inputs,output=c[i])

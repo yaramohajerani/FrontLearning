@@ -26,7 +26,7 @@ trn_dir = os.path.join(data_dir,'train')
 tst_dir = os.path.join(data_dir,'test')
 
 #-- read in images
-def load_train_data():
+def load_data():
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_dir,'images/*.png'))
     tst_list = glob(os.path.join(tst_dir,'images/*.png'))
@@ -67,7 +67,7 @@ def train_model(parameters):
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
     #-- load images
-    data = load_train_data()
+    data = load_data()
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
