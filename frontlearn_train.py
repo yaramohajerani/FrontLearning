@@ -26,10 +26,13 @@ trn_dir = os.path.join(data_dir,'train')
 tst_dir = os.path.join(data_dir,'test')
 
 #-- read in images
-def load_data():
+def load_data(filter_type,filter_fraction):
+    #-- make subdirectories for input images
+    trn_subdir = os.path.join(trn_dir,'images_%s_%.3f'%(filter_type,filter_fraction))
+    tst_subdir = os.path.join(tst_dir,'images_%s_%.3f'%(filter_type,filter_fraction))
     #-- get a list of the input files
-    trn_list = glob(os.path.join(trn_dir,'images/*.png'))
-    tst_list = glob(os.path.join(tst_dir,'images/*.png'))
+    trn_list = glob(os.path.join(trn_subdir,'*.png'))
+    tst_list = glob(os.path.join(tst_subdir,'*.png'))
     #-- get just the file names
     trn_files = [os.path.basename(i) for i in trn_list]
     tst_files = [os.path.basename(i) for i in tst_list]
@@ -43,7 +46,7 @@ def load_data():
     train_lbl = np.zeros((n,w,h,1))
     for i,f in enumerate(trn_files):
         #-- same file name but different directories for images and labels
-        train_img[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'images',f)).convert('L'))/255.
+        train_img[i,:,:,0] = np.array(Image.open(os.path.join(trn_subdir,f)).convert('L'))/255.
         train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f)).convert('L'))/255.
 
     #-- also get the test data
@@ -62,12 +65,21 @@ def train_model(parameters):
     n_epochs = np.int(parameters['EPOCHS'])
     n_layers = np.int(parameters['LAYERS_DOWN'])
     n_init = np.int(parameters['N_INIT'])
+    filter_type = parameters['INPUT_FILTER']
+    filter_fraction = np.float(parameters['FILTER_FRACTION'])
     drop = np.float(parameters['DROPOUT'])
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
     #-- load images
-    data = load_data()
+    data = load_data(filter_type,filter_fraction)
+
+    if filter_type in ['None','none','NONE','N','n']:
+        filter_str = ''
+        fraction_str = ''
+    else:
+        filter_str = '_%s'%filter_type
+        fraction_str = '_%.3f'%filter_fraction
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
@@ -79,8 +91,8 @@ def train_model(parameters):
         n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str))
+    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s.h5'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -116,8 +128,8 @@ def train_model(parameters):
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s'\
-            %(n_batch,n_epochs,n_tot,n_init,drop_str)
+        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
+            %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image
