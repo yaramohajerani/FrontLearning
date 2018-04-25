@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-frontlearn_train.py
+frontlearn_train_iterative.py
 by Yara Mohajerani (04/2018)
 
 Train U-Net model in frontlearn_unet.py
@@ -26,10 +26,10 @@ trn_dir = os.path.join(data_dir,'train')
 tst_dir = os.path.join(data_dir,'test')
 
 #-- read in images
-def load_data(filter_str,fraction_str):
+def load_data(subdir):
     #-- make subdirectories for input images
-    trn_subdir = os.path.join(trn_dir,'images%s%s'%(filter_str,fraction_str))
-    tst_subdir = os.path.join(tst_dir,'images%s%s'%(filter_str,fraction_str))
+    trn_subdir = os.path.join(trn_dir,subdir)
+    tst_subdir = os.path.join(tst_dir,subdir)
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
@@ -47,10 +47,7 @@ def load_data(filter_str,fraction_str):
     for i,f in enumerate(trn_files):
         #-- same file name but different directories for images and labels
         train_img[i,:,:,0] = np.array(Image.open(os.path.join(trn_subdir,f)).convert('L'))/255.
-        if filter_str =='_sobel':
-            train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f.replace('_Sobel',''))).convert('L'))/255.
-        else:
-            train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f)).convert('L'))/255.
+        train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f)).convert('L'))/255.
 
     #-- also get the test data
     n_test = len(tst_files)
@@ -67,6 +64,7 @@ def train_model(parameters):
     n_batch = np.int(parameters['BATCHES'])
     n_epochs = np.int(parameters['EPOCHS'])
     n_layers = np.int(parameters['LAYERS_DOWN'])
+    n_tot = 2*n_layers+1
     n_init = np.int(parameters['N_INIT'])
     filter_type = parameters['INPUT_FILTER']
     filter_fraction = np.float(parameters['FILTER_FRACTION'])
@@ -78,28 +76,32 @@ def train_model(parameters):
     if filter_type in ['None','none','NONE','N','n']:
         filter_str = ''
         fraction_str = ''
-    elif filter_type == 'sobel':
-        filter_str = '_%s'%filter_type
-        fraction_str = ''
     else:
         filter_str = '_%s'%filter_type
         fraction_str = '_%.3f'%filter_fraction
 
-    #-- load images
-    data = load_data(filter_str,fraction_str)
+    n_batch_new = np.int(parameters['BATCHES_NEW'])
+    n_epochs_new = np.int(parameters['EPOCHS_NEW'])
+    n_layers_new = np.int(parameters['LAYERS_DOWN_NEW'])
+    n_init_new = np.int(parameters['N_INIT_NEW'])
 
+    #-- subdircetory
+    subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str)
+
+    data = load_data(subdir)
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
 
     #-- import mod
     unet = imp.load_source('unet_model', os.path.join(ddir,'frontlearn_unet_dynamic.py'))
-    model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
-        n_init=n_init,n_layers=n_layers,drop=drop)
+    model,n_tot_new = unet.unet_model(height=height,width=width,channels=channels,\
+        n_init=n_init_new,n_layers=n_layers_new,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str))
+    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s_iterative_%ibtch_%iepochs_%ilayers_%iinit.h5'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str,n_batch_new,n_epochs_new,n_tot_new,n_init_new))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -115,7 +117,7 @@ def train_model(parameters):
         model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
             verbose=1, save_best_only=True)
         #-- now fit the model
-        model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
+        model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch_new, epochs=n_epochs_new, verbose=1,\
             validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
 
     print('Model is trained. Running on test data...')
@@ -134,15 +136,11 @@ def train_model(parameters):
     for t in ['train','test']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
-        #-- make output directory
-        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-            %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str)
-        if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
-            os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image
         for i in range(len(out_imgs)):
             im = image.array_to_img(out_imgs[i])
-            im.save(os.path.join(outdir[t],out_subdir,'%s'%names[t][i]))
+            im.save(os.path.join(outdir[t],subdir,'%s_iterative_%ibtch_%iepochs_%ilayers_%iinit.png'\
+                %(names[t][i],n_batch_new,n_epochs_new,n_tot_new,n_init_new)))
 
 #-- main function to get parameters and pass them along to fitting function
 def main():

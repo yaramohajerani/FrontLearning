@@ -1,7 +1,11 @@
 EPOCHS	100
-BATCHES	5
+BATCHES	3
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
 N_INIT	40	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
-DROPOUT 0       #-- dropout fraction. 0 for no dropout
-INPUT_FILTER	sobel
+DROPOUT	0       #-- dropout fraction. 0 for no dropout
+INPUT_FILTER	None
 FILTER_FRACTION	0.250
+EPOCHS_NEW	50
+BATCHES_NEW	5
+LAYERS_DOWN_NEW	3
+N_INIT_NEW	30
