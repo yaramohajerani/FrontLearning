@@ -1,9 +1,10 @@
 # FrontLearning
 
-This repository contains Python scripts utlizing Keras to implement a Convlution Neural Netowrk (CNN) to identify the grounding line of glaciers from satellite imagery.
+This repository contains Python scripts utilizing Keras to implement a Convolution Neural Netowrk (CNN) to identify glacier fronts from satellite imagery.
 
-Data Provided by Michael Wood
-Scripts by Yara Mohajerani
+Scripts by Yara Mohajerani.
+
+Training data provided by Michael Wood.
 
 More details will be provided as the project moves forward.
 
