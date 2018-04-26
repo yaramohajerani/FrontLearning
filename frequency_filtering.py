@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-sharpen_input.py
+frequency_filtering.py
 by Yara Mohajerani (04/2018)
 
 Do a low-pass or high-pass filter in fourier space to clear up the images

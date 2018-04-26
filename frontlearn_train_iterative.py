@@ -61,24 +61,36 @@ def load_data(subdir):
         'trn_names':trn_files,'tst_names':tst_files}
 
 def train_model(parameters):
-    n_batch = np.int(parameters['BATCHES'])
-    n_epochs = np.int(parameters['EPOCHS'])
-    n_layers = np.int(parameters['LAYERS_DOWN'])
+    n_batch = int(parameters['BATCHES'])
+    n_epochs = int(parameters['EPOCHS'])
+    n_layers = int(parameters['LAYERS_DOWN'])
     n_tot = 2*n_layers+1
     n_init = np.int(parameters['N_INIT'])
-    filter_type = parameters['INPUT_FILTER']
-    filter_fraction = np.float(parameters['FILTER_FRACTION'])
-    drop = np.float(parameters['DROPOUT'])
+    #filter_type = parameters['INPUT_FILTER']
+    #filter_fraction = np.float(parameters['FILTER_FRACTION'])
+    sharpness = float(parameters['SHARPNESS'])
+    contrast = float(parameters['CONTRAST'])
+    drop = float(parameters['DROPOUT'])
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
+    '''
     if filter_type in ['None','none','NONE','N','n']:
         filter_str = ''
         fraction_str = ''
     else:
         filter_str = '_%s'%filter_type
         fraction_str = '_%.3f'%filter_fraction
+    '''
+    if sharpness in ['None','none','NONE','N','n']:
+        sharpness_str = ''
+    else:
+        sharpness_str = '_sharpness%.1f'%sharpness
+    if contrast in ['None','none','NONE','N','n']:
+        contrast_str = ''
+    else:
+        contrast_str = '_contrast%.1f'%contrast
 
     n_batch_new = np.int(parameters['BATCHES_NEW'])
     n_epochs_new = np.int(parameters['EPOCHS_NEW'])
@@ -87,7 +99,7 @@ def train_model(parameters):
 
     #-- subdircetory
     subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str)
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str)
 
     data = load_data(subdir)
     n,height,width,channels=data['trn_img'].shape
@@ -101,7 +113,7 @@ def train_model(parameters):
 
     #-- checkpoint file
     chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s_iterative_%ibtch_%iepochs_%ilayers_%iinit.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str,n_batch_new,n_epochs_new,n_tot_new,n_init_new))
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str,n_batch_new,n_epochs_new,n_tot_new,n_init_new))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):

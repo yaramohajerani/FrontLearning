@@ -26,10 +26,10 @@ trn_dir = os.path.join(data_dir,'train')
 tst_dir = os.path.join(data_dir,'test')
 
 #-- read in images
-def load_data(filter_str,fraction_str):
+def load_data(sharpness_str,contrast_str):
     #-- make subdirectories for input images
-    trn_subdir = os.path.join(trn_dir,'images%s%s'%(filter_str,fraction_str))
-    tst_subdir = os.path.join(tst_dir,'images%s%s'%(filter_str,fraction_str))
+    trn_subdir = os.path.join(trn_dir,'images%s%s'%(sharpness_str,contrast_str))
+    tst_subdir = os.path.join(tst_dir,'images%s%s'%(sharpness_str,contrast_str))
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
@@ -47,10 +47,7 @@ def load_data(filter_str,fraction_str):
     for i,f in enumerate(trn_files):
         #-- same file name but different directories for images and labels
         train_img[i,:,:,0] = np.array(Image.open(os.path.join(trn_subdir,f)).convert('L'))/255.
-        if filter_str =='_sobel':
-            train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f.replace('_Sobel',''))).convert('L'))/255.
-        else:
-            train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f)).convert('L'))/255.
+        train_lbl[i,:,:,0] = np.array(Image.open(os.path.join(trn_dir,'labels',f)).convert('L'))/255.
 
     #-- also get the test data
     n_test = len(tst_files)
@@ -64,29 +61,27 @@ def load_data(filter_str,fraction_str):
         'trn_names':trn_files,'tst_names':tst_files}
 
 def train_model(parameters):
-    n_batch = np.int(parameters['BATCHES'])
-    n_epochs = np.int(parameters['EPOCHS'])
-    n_layers = np.int(parameters['LAYERS_DOWN'])
-    n_init = np.int(parameters['N_INIT'])
-    filter_type = parameters['INPUT_FILTER']
-    filter_fraction = np.float(parameters['FILTER_FRACTION'])
-    drop = np.float(parameters['DROPOUT'])
+    n_batch = int(parameters['BATCHES'])
+    n_epochs = int(parameters['EPOCHS'])
+    n_layers = int(parameters['LAYERS_DOWN'])
+    n_init = int(parameters['N_INIT'])
+    sharpness = float(parameters['SHARPNESS'])
+    contrast = float(parameters['CONTRAST'])
+    drop = float(parameters['DROPOUT'])
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
-    if filter_type in ['None','none','NONE','N','n']:
-        filter_str = ''
-        fraction_str = ''
-    elif filter_type == 'sobel':
-        filter_str = '_%s'%filter_type
-        fraction_str = ''
+    if sharpness in ['None','none','NONE','N','n']:
+        sharpness_str = ''
     else:
-        filter_str = '_%s'%filter_type
-        fraction_str = '_%.3f'%filter_fraction
-
+        sharpness_str = '_sharpness%.1f'%sharpness
+    if contrast in ['None','none','NONE','N','n']:
+        contrast_str = ''
+    else:
+        contrast_str = '_contrast%.1f'%contrast
     #-- load images
-    data = load_data(filter_str,fraction_str)
+    data = load_data(sharpness_str,contrast_str)
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
@@ -99,7 +94,7 @@ def train_model(parameters):
 
     #-- checkpoint file
     chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str))
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -136,7 +131,7 @@ def train_model(parameters):
         print out_imgs.shape
         #-- make output directory
         out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-            %(n_batch,n_epochs,n_tot,n_init,drop_str,filter_str,fraction_str)
+            %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

@@ -5,6 +5,8 @@ by Yara Mohajerani
 
 Post-Processing of the predictions of the neural network
 
+TO BE COMPLETED
+
 History
     04/2018 Written
 """
@@ -68,7 +70,7 @@ def post_process(parameters):
                 #-- less than the treshold, connect the line through the center
 
 
-]
+
         #-- write to file
         filename = os.path.basename(in_list[i])
         im = image.array_to_img(img.reshape(h,w,1))
