@@ -18,15 +18,8 @@ from glob import glob
 from PIL import Image
 import matplotlib.pyplot as plt
 
-#-- directory setup
-#- current directory
-ddir = os.path.dirname(os.path.realpath(__file__))
-data_dir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'data'))
-trn_dir = os.path.join(data_dir,'train')
-tst_dir = os.path.join(data_dir,'test')
-
 #-- read in images
-def load_data(subdir):
+def load_data(trn_dir,tst_dir,subdir):
     #-- make subdirectories for input images
     trn_subdir = os.path.join(trn_dir,subdir)
     tst_subdir = os.path.join(tst_dir,subdir)
@@ -71,6 +64,19 @@ def train_model(parameters):
     sharpness = float(parameters['SHARPNESS'])
     contrast = float(parameters['CONTRAST'])
     drop = float(parameters['DROPOUT'])
+    n_batch_new = np.int(parameters['BATCHES_NEW'])
+    n_epochs_new = np.int(parameters['EPOCHS_NEW'])
+    n_layers_new = np.int(parameters['LAYERS_DOWN_NEW'])
+    n_init_new = np.int(parameters['N_INIT_NEW'])
+    #-- directory setup
+    #- current directory
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    ddir = os.path.join(current_dir,'%s.dir'%glacier)
+    data_dir = os.path.join(ddir, 'data')
+    trn_dir = os.path.join(data_dir,'train')
+    tst_dir = os.path.join(data_dir,'test')
+
+    #-- set up labels from parameters
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
@@ -92,22 +98,17 @@ def train_model(parameters):
     else:
         contrast_str = '_contrast%.1f'%contrast
 
-    n_batch_new = np.int(parameters['BATCHES_NEW'])
-    n_epochs_new = np.int(parameters['EPOCHS_NEW'])
-    n_layers_new = np.int(parameters['LAYERS_DOWN_NEW'])
-    n_init_new = np.int(parameters['N_INIT_NEW'])
-
     #-- subdircetory
     subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
         %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str)
 
-    data = load_data(subdir)
+    data = load_data(trn_dir,tst_dir,subdir)
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
 
     #-- import mod
-    unet = imp.load_source('unet_model', os.path.join(ddir,'frontlearn_unet_dynamic.py'))
+    unet = imp.load_source('unet_model', os.path.join(current_dir,'frontlearn_unet_dynamic.py'))
     model,n_tot_new = unet.unet_model(height=height,width=width,channels=channels,\
         n_init=n_init_new,n_layers=n_layers_new,drop=drop)
 

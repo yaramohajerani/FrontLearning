@@ -15,15 +15,8 @@ import numpy as np
 from glob import glob
 from PIL import Image,ImageEnhance
 
-#-- directory setup
-#- current directory
-ddir = os.path.dirname(os.path.realpath(__file__))
-data_dir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'data'))
-trn_dir = os.path.join(data_dir,'train')
-tst_dir = os.path.join(data_dir,'test')
-
 #-- read in images
-def load_data():
+def load_data(trn_dir,tst_dir):
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_dir,'images/*.png'))
     tst_list = glob(os.path.join(tst_dir,'images/*.png'))
@@ -52,10 +45,18 @@ def load_data():
     names = {'train':trn_files,'test':tst_files}
     return [images,names]
 
-#-- function to read and sharpen data
-def enhance_images(sharpness,contrast):
+#-- function to read and enhance the data
+def enhance_images(sharpness,contrast,glacier):
+    #-- directory setup
+    #- current directory
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    ddir = os.path.join(current_dir,'%s.dir'%glacier)
+    data_dir = os.path.join(ddir, 'data')
+    trn_dir = os.path.join(data_dir,'train')
+    tst_dir = os.path.join(data_dir,'test')
+
     #-- first read data
-    images,names = load_data()
+    images,names = load_data(trn_dir,tst_dir)
     #-- make output directory dictionary
     outdir = {}
     outdir['train'] = os.path.join(trn_dir,'images_sharpness%.1f_contrast%.1f'%(sharpness,contrast))
@@ -78,18 +79,21 @@ def enhance_images(sharpness,contrast):
 #-- main function to get user input and call sharpen function
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['sharpness=','contrast=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=S:C:',long_options)
+    long_options = ['sharpness=','contrast=','glacier=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=S:C:G:',long_options)
 
     sharpness= 0.1
     contrast = 4
+    glacier = 'Jakobshavn'
     for opt, arg in optlist:
         if opt in ('-S','--sharpness'):
             sharpness = np.float(arg)
         elif opt in ('-C','--contrast'):
             contrast = np.float(arg)
+        elif opt in ('-G','--glacier'):
+            glacier = arg
 
-    enhance_images(sharpness,contrast)
+    enhance_images(sharpness,contrast,glacier)
 
 if __name__ == '__main__':
     main()

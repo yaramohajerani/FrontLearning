@@ -17,11 +17,17 @@ import sys
 from glob import glob
 from PIL import Image
 import matplotlib.pyplot as plt
-from shapely.geometry import Point, LineString
+import rasterio
+from rasterio.features import shapes
+from shapely.geometry import shape
 
+#-- directory setup
+#- current directory
+ddir = os.path.dirname(os.path.realpath(__file__))
+data_dir = os.path.abspath(os.path.join(os.path.dirname( __file__ ), 'data'))
+tst_dir = os.path.join(data_dir,'test')
 
 def post_process(parameters):
-    glacier = parameters['GLACIER_NAME']
     n_batch = int(parameters['BATCHES'])
     n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
@@ -29,15 +35,6 @@ def post_process(parameters):
     sharpness = float(parameters['SHARPNESS'])
     contrast = float(parameters['CONTRAST'])
     drop = float(parameters['DROPOUT'])
-    #-- directory setup
-    #- current directory
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    ddir = os.path.join(current_dir,'%s.dir'%glacier)
-    data_dir = os.path.join(ddir, 'data')
-    trn_dir = os.path.join(data_dir,'train')
-    tst_dir = os.path.join(data_dir,'test')
-
-    #-- set up labels from parameters
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
@@ -55,49 +52,30 @@ def post_process(parameters):
         contrast_str = '_contrast%.1f'%contrast
 
     #-- read in output data of the neural network
-    subdir = os.path.join(tst_dir,'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
+    ddir = os.path.join(tst_dir,'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
         %(n_batch,n_epochs,layers_tot,n_init,drop_str,sharpness_str,contrast_str))
 
     #-- get a list of the input files
-    in_list = glob(os.path.join(subdir,'*.png'))
+    in_list = glob(os.path.join(ddir,'*.png'))
     n_files = len(in_list)
     w,h = np.array(Image.open(in_list[0]).convert('L')).shape
     mask = None
     #-- vectorize files
     for i in range(n_files):
-        img = np.array(Image.open(in_list[i]).convert('L'))/255.
+        with rasterio.drivers():
+            with rasterio.open(in_list[i]) as src:
+                image = src.read(1) # first band
+                results = ({'properties': {'raster_val': v}, 'geometry': s}\
+                    for i, (s, v) in enumerate(shapes(image, mask=mask, transform=src.affine)))
 
-        #-- set a threshold for points that are to be identified as the front
-        at = 0.8 #-- amplitude threshold
-        img_flat = img.flatten()
-        ind_black = np.squeeze(np.nonzero(img_flat <= at))
-        ind_white = np.squeeze(np.nonzero(img_flat > at))
-        img_flat[ind_black] = 0.
-        img_flat[ind_white] = 1.
-        img2 = img_flat.reshape(img.shape)
-
-        #-- now draw a line through the points
-        #-- first get the index of all the black points
-        ind_2D = np.squeeze(np.nonzero(img2 == 0.))
-
-        #-- get the vertical mean and std of all the points
-        y_avg = np.mean(ind_2D[1,:])
-        y_std = np.std(ind_2D[1,:])
-
-        pts = []
-        n_pts = len(ind_2D[0,:])
-        for i in range(n_pts):
-            if (int(ind_2D[1,i]) > (y_avg - y_std) and int(ind_2D[1,i]) < (y_avg + y_std)):
-                pts.append(Point(int(ind_2D[0,i]),int(ind_2D[1,i])))
-        frontline = LineString(pts)
-
-        x, y = frontline.xy
-        plt.plot(x,y,alpha=0.5)
-        plt.imshow(np.transpose(img2),zorder=1)
-        plt.plot(np.arange(w),np.ones(h)*y_avg)
-        plt.gca().invert_xaxis()
-        plt.gca().invert_yaxis()
-        plt.show()
+                geoms = list(results)
+                print(len(geoms))
+                f = plt.figure(i)
+                for j in range(len(geoms)):
+                    s = shape(geoms[j]['geometry'])
+                    x,y = s.exterior.xy
+                    plt.plot(x,y)
+                plt.savefig(os.path.join(ddir,in_list[i][:-4]+'.pdf'),format='pdf')
 
 #-- main function to get parameters and pass them along to the postprocessing function
 def main():
