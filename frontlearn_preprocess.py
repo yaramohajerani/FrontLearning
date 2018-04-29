@@ -26,17 +26,12 @@ def load_data(trn_dir,tst_dir):
 
     #-- read training data
     n = len(trn_files)
-    #-- get dimensions, force to 1 b/w channel
-    w,h = np.array(Image.open(trn_list[0]).convert('L')).shape
-
     train_img = []
     for i,f in enumerate(trn_files):
         train_img.append(Image.open(os.path.join(trn_dir,'images',f)))
 
     #-- also get the test data
     n_test = len(tst_files)
-    #-- get dimensions, force to 1 b/w channel
-    w_test,h_test = np.array(Image.open(tst_list[0]).convert('L')).shape
     test_img = []
     for i in range(n_test):
         test_img.append(Image.open(tst_list[i]))
@@ -59,8 +54,8 @@ def enhance_images(sharpness,contrast,glacier):
     images,names = load_data(trn_dir,tst_dir)
     #-- make output directory dictionary
     outdir = {}
-    outdir['train'] = os.path.join(trn_dir,'images_sharpness%.1f_contrast%.1f'%(sharpness,contrast))
-    outdir['test'] = os.path.join(tst_dir,'images_sharpness%.1f_contrast%.1f'%(sharpness,contrast))
+    outdir['train'] = os.path.join(trn_dir,'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
+    outdir['test'] = os.path.join(tst_dir,'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
     #-- loop through train and test data
     for t in ['train','test']:
         if (not os.path.isdir(outdir[t])):
