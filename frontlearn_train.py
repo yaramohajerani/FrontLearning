@@ -16,13 +16,17 @@ import imp
 import sys
 from glob import glob
 from PIL import Image
-import matplotlib.pyplot as plt
+from keras import backend as K
+from tensorflow.python.client import device_lib
+#-- Print backend information
+print(device_lib.list_local_devices())
+print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers):
+def load_data(suffix,trn_dir,tst_dir,n_layers):
     #-- make subdirectories for input images
-    trn_subdir = os.path.join(trn_dir,'images%s%s'%(sharpness_str,contrast_str))
-    tst_subdir = os.path.join(tst_dir,'images%s%s'%(sharpness_str,contrast_str))
+    trn_subdir = os.path.join(trn_dir,'images%s'%(suffix))
+    tst_subdir = os.path.join(tst_dir,'images%s'%(suffix))
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
@@ -68,8 +72,7 @@ def train_model(parameters):
     n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
     n_init = int(parameters['N_INIT'])
-    sharpness = float(parameters['SHARPNESS'])
-    contrast = float(parameters['CONTRAST'])
+    suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
 
     #-- directory setup
@@ -85,16 +88,8 @@ def train_model(parameters):
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
-    if sharpness in ['None','none','NONE','N','n']:
-        sharpness_str = ''
-    else:
-        sharpness_str = '_sharpness%.2f'%sharpness
-    if contrast in ['None','none','NONE','N','n']:
-        contrast_str = ''
-    else:
-        contrast_str = '_contrast%.1f'%contrast
     #-- load images
-    data = load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers)
+    data = load_data(suffix,trn_dir,tst_dir,n_layers)
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
@@ -106,8 +101,8 @@ def train_model(parameters):
         n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str))
+    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s.h5'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -124,7 +119,7 @@ def train_model(parameters):
             verbose=1, save_best_only=True)
         #-- now fit the model
         model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
+            validation_split=0.1, shuffle=True, callbacks=[model_checkpoint])
 
     print('Model is trained. Running on test data...')
 
@@ -143,8 +138,8 @@ def train_model(parameters):
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-            %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str)
+        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s'\
+            %(n_batch,n_epochs,n_tot,n_init,drop_str,suffix)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 u"""
-frontlearn_train.py
-by Yara Mohajerani (04/2018)
+frontlearn_train_AUGMENT.py
+by Yara Mohajerani (05/2018)
 
 Train U-Net model in frontlearn_unet.py
 
 Update History
-        04/2018 Written
+        05/2018 Forked from frontlearn_train.py
 """
 import os
 import numpy as np
@@ -15,14 +15,18 @@ from keras.preprocessing import image
 import imp
 import sys
 from glob import glob
-from PIL import Image
-import matplotlib.pyplot as plt
+from PIL import Image,ImageOps
+from keras import backend as K
+from tensorflow.python.client import device_lib
+#-- Print backend information
+print(device_lib.list_local_devices())
+print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers):
+def load_data(suffix,trn_dir,tst_dir,n_layers):
     #-- make subdirectories for input images
-    trn_subdir = os.path.join(trn_dir,'images%s%s'%(sharpness_str,contrast_str))
-    tst_subdir = os.path.join(tst_dir,'images%s%s'%(sharpness_str,contrast_str))
+    trn_subdir = os.path.join(trn_dir,'images%s'%(suffix))
+    tst_subdir = os.path.join(tst_dir,'images%s'%(suffix))
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
@@ -31,7 +35,7 @@ def load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers):
     tst_files = [os.path.basename(i) for i in tst_list]
 
     #-- read training data
-    n = len(trn_files)
+    n = len(trn_files)*3
     #-- get dimensions, force to 1 b/w channel
     im_shape = np.array(Image.open(trn_list[0]).convert('L')).shape
     h,w = im_shape
@@ -48,10 +52,28 @@ def load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers):
         w_pad = np.copy(w)
     train_img = np.ones((n,h_pad,w_pad))
     train_lbl = np.ones((n,h_pad,w_pad))
-    for i,f in enumerate(trn_files):
+    count = 0
+    for f in trn_files:
         #-- same file name but different directories for images and labels
-        train_img[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(os.path.join(trn_subdir,f)).convert('L'))/255.
-        train_lbl[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(os.path.join(trn_dir,'labels',f.replace('Subset','Front'))).convert('L'))/255.
+        #-- read image and label first
+        img = Image.open(os.path.join(trn_subdir,f)).convert('L')
+        lbl = Image.open(os.path.join(trn_dir,'labels',f.replace('Subset','Front'))).convert('L')
+        #-- do permutations with the following:
+        #-- 1) flip image Horizontal (spatial)
+        #-- 2) flip color (invert)
+        #-- 3) ?
+        #-- ORIGINAL
+        train_img[count][:im_shape[0],:im_shape[1]] = np.array(img)/255.
+        train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
+        count += 1
+        #-- INVERT COLORS
+        train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
+        train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
+        count += 1
+        #-- MIRROR HORIZONTALLY
+        train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
+        train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
+        count += 1
 
     #-- also get the test data
     n_test = len(tst_files)
@@ -68,8 +90,7 @@ def train_model(parameters):
     n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
     n_init = int(parameters['N_INIT'])
-    sharpness = float(parameters['SHARPNESS'])
-    contrast = float(parameters['CONTRAST'])
+    suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
 
     #-- directory setup
@@ -85,37 +106,39 @@ def train_model(parameters):
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
-    if sharpness in ['None','none','NONE','N','n']:
-        sharpness_str = ''
-    else:
-        sharpness_str = '_sharpness%.2f'%sharpness
-    if contrast in ['None','none','NONE','N','n']:
-        contrast_str = ''
-    else:
-        contrast_str = '_contrast%.1f'%contrast
     #-- load images
-    data = load_data(sharpness_str,contrast_str,trn_dir,tst_dir,n_layers)
+    data = load_data(suffix,trn_dir,tst_dir,n_layers)
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
 
     #-- import mod
-    unet = imp.load_source('unet_model', os.path.join(current_dir,'frontlearn_unet_dynamic_old.py'))
+    unet = imp.load_source('unet_model', os.path.join(current_dir,'frontlearn_unet_dynamic.py'))
     model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
         n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s%s.h5'\
-        %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str))
+    chk_file = os.path.join(ddir,'frontlearn_weights_%ibtch_%iepochs_%ilayers_%iinit%s%s.h5'\
+        %(n_batch,n_epochs,n_tot,n_init,drop_str,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
         print('Check point exists; loading model from file.')
         # load weights
         model.load_weights(chk_file)
-        # Compile model (required to make predictions)
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        if parameters['RETRAIN'] in ['y','Y']:
+            #-- continue Training
+            #-- create checkpoint
+            model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
+                verbose=1, save_best_only=True)
+            #-- now fit the model
+            model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
+                validation_split=0.1, shuffle=True, callbacks=[model_checkpoint])
+        else:
+            # Compile model (required to make predictions)
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     #-- if not train model
     else:
         print('Did not find check points. Training model...')
@@ -124,7 +147,7 @@ def train_model(parameters):
             verbose=1, save_best_only=True)
         #-- now fit the model
         model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
+            validation_split=0.1, shuffle=True, callbacks=[model_checkpoint])
 
     print('Model is trained. Running on test data...')
 
@@ -139,12 +162,12 @@ def train_model(parameters):
     names['train'] = data['trn_names']
     names['test'] = data['tst_names']
     #-- Now test the model on both the test data and the train data
-    for t in ['train','test']:
+    for t in ['test']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-            %(n_batch,n_epochs,n_tot,n_init,drop_str,sharpness_str,contrast_str)
+        out_subdir = 'output_%ibtch_%iepochs_%ilayers_%iinit%s%s'\
+            %(n_batch,n_epochs,n_tot,n_init,drop_str,suffix)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

@@ -27,9 +27,9 @@ def post_process(parameters):
     n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
     n_init = int(parameters['N_INIT'])
-    sharpness = float(parameters['SHARPNESS'])
-    contrast = float(parameters['CONTRAST'])
+    suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
+
     #-- directory setup
     #- current directory
     current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -46,18 +46,9 @@ def post_process(parameters):
     #-- total number of layers
     layers_tot = 2*n_layers+1
 
-    if sharpness in ['None','none','NONE','N','n']:
-        sharpness_str = ''
-    else:
-        sharpness_str = '_sharpness%.2f'%sharpness
-    if contrast in ['None','none','NONE','N','n']:
-        contrast_str = ''
-    else:
-        contrast_str = '_contrast%.1f'%contrast
-
     #-- read in output data of the neural network
-    subdir = os.path.join(tst_dir,'output_%ibtch_%iepochs_%ilayers_%iinit%s%s%s'\
-        %(n_batch,n_epochs,layers_tot,n_init,drop_str,sharpness_str,contrast_str))
+    subdir = os.path.join(tst_dir,'output_%ibtch_%iepochs_%ilayers_%iinit%s%s'\
+        %(n_batch,n_epochs,layers_tot,n_init,drop_str,suffix))
 
     #-- get a list of the input files
     in_list = sorted(glob(os.path.join(subdir,'*png')))
@@ -98,7 +89,7 @@ def post_process(parameters):
         x_avg = np.mean(ind_2D[1,:])
         x_std = np.std(ind_2D[1,:])
         #-- scaling for sigma
-        yscale = 1.
+        yscale = 2. #1.
         xscale = 2.
         pts = []
         n_pts = len(ind_2D[1,:])
@@ -118,7 +109,7 @@ def post_process(parameters):
         x_std = np.std(xpts1)
         #-- scaling for sigma
         yscale = 3.0
-        xscale = 1.5
+        xscale = 2.0 #1.5
         ypts2 = []
         xpts2 = []
         n_pts = len(xpts1)
