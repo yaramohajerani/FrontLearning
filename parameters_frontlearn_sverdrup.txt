@@ -1,8 +1,0 @@
-GLACIER_NAME	Sverdrup
-EPOCHS	100
-BATCHES	5
-LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
-N_INIT	40	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
-DROPOUT 0.2       #-- dropout fraction. 0 for no dropout
-SUFFIX	_autocontrast_edgeEnhance	#input/out suffix
-RETRAIN	N

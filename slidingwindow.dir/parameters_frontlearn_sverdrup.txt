@@ -1,0 +1,11 @@
+GLACIER_NAME	Sverdrup
+EPOCHS	30
+BATCHES	5
+SUFFIX	_autocontrast_edgeEnhance	#input/out suffix
+RETRAIN	N
+HALF_WIDTH      20
+HALF_HEIGHT     20
+N_WINDOWS       100
+N_RELU 64
+N_SOFTMAX       10
+RETRAIN Y
