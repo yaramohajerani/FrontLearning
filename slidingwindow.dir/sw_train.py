@@ -48,55 +48,73 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
         #-- note first half is centered on boundaries and the second half is not
         #-------------------------------------------------------------------------------------------------------------------------
         #-- for training data we sample randomly, but for testing data we break down the whole iamge into windows
-        if d == 'train':
-            labels[d] = np.zeros(n*n_windows*2)
-            images[d] = np.zeros((n*n_windows*2, 2*HH + 1 , 2*HW + 1))
-            #-- get indices of boundaery for each image and select from them randomly
-            for i,f in enumerate(files):
-                #-- same file name but different directories for images and labels
-                img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
-                lbl = np.array(Image.open(os.path.join(ddir[d],'labels',f.replace('Subset','Front'))).convert('L'))/255.
+        labels[d] = np.zeros(n*n_windows)
+        images[d] = np.zeros((n*n_windows, 2*HH + 1 , 2*HW + 1))
+        #-- get indices of boundaery for each image and select from them randomly
+        for i,f in enumerate(files):
+            #-- same file name but different directories for images and labels
+            img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
+            lbl = np.array(Image.open(os.path.join(ddir[d],'labels',f.replace('Subset','Front'))).convert('L'))/255.
 
-                ih,iw = np.squeeze(np.nonzero(lbl==0.))
-                ih_nb,iw_nb = np.squeeze(np.nonzero(lbl==1.))
+            #-- take n_window random samples from the image
+            ih = np.random.randint(HH,high=img.shape[0]-HH,size=n_windows)
+            iw = np.random.randint(HW,high=img.shape[1]-HW,size=n_windows)
+            for j in range(n_windows):
+                images[d][j] = img[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
+                label_box = lbl[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
+                count_boundary = np.count_nonzero(label_box==0.)
+                #-- if there is any pixel from a boundary, mark as boundary
+                if count_boundary > 0:
+                    labels[d][j] = 1
+                else:
+                    labels[d][j] = 0
+                    
+            #-- the following commented block is kept for reference, but it's a different approach where we pick equal numbers
+            #-- of windows CENTERED on the boundary and points not including any boundary. The downside is the NN gets used to 
+            #-- the boundary being in the middle, which is not helpful when finding boundaries in test data.
+            """
+            ih,iw = np.squeeze(np.nonzero(lbl==0.))
+            ih_nb,iw_nb = np.squeeze(np.nonzero(lbl==1.))
 
-                #-- sample twice as many points so we can skip the ones that are close to the edge
-                inds_boundary = random.sample(np.arange(0,len(ih)),2*n_windows)
-                inds_nb = random.sample(np.arange(0,len(ih_nb)),4*n_windows)
-                #-- fill boundary elements
-                window_count = 0 #-- window count
-                success_count = 0 #-- successful counts
-                while success_count < n_windows:
-                    j = inds_boundary[window_count]
+            #-- sample more points so we can skip the ones that are close to the edge
+            inds_boundary = random.sample(np.arange(0,len(ih)),4*n_windows)
+            inds_nb = random.sample(np.arange(0,len(ih_nb)),4*n_windows)
+            #-- fill boundary elements
+            window_count = 0 #-- window count
+            success_count = 0 #-- successful counts
+            while success_count < n_windows:
+                j = inds_boundary[window_count]
+                try:
+                    images[d][i*n_windows+success_count] = img[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
+                    labels[d][i*n_windows+success_count] = 1
+                    success_count += 1
+                except:
+                    pass
+                    #print 'skipped h-index %i and w-index %i'%(ih[j],iw[j])
+                window_count += 1
+            #-- fill non-boundary elements
+            window_count = 0 #-- window count
+            success_count = 0 #-- successful counts
+            while success_count < n_windows:
+                j = inds_nb[window_count]
+                #-- if any part of the boundary is in the box, ignore it
+                label_box = lbl[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
+                if np.count_nonzero(label_box==0.) == 0:
                     try:
-                        images[d][i*n_windows+success_count] = img[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
-                        labels[d][i*n_windows+success_count] = 1
+                        images[d][i*n_windows+success_count] = img[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
+                        labels[d][i*n_windows+success_count] = 0
                         success_count += 1
                     except:
                         pass
-                        #print 'skipped h-index %i and w-index %i'%(ih[j],iw[j])
-                    window_count += 1
-                #-- fill non-boundary elements
-                window_count = 0 #-- window count
-                success_count = 0 #-- successful counts
-                while success_count < n_windows:
-                    j = inds_nb[window_count]
-                    #-- if any part of the boundary is in the box, ignore it
-                    label_box = lbl[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
-                    if np.count_nonzero(label_box==0.) == 0:
-                        try:
-                            images[d][i*n_windows+success_count] = img[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
-                            labels[d][i*n_windows+success_count] = 0
-                            success_count += 1
-                        except:
-                            pass
-                            #print 'skipped h-index %i and w-index %i'%(ih_nb[j],iw_nb[j])
-                    else:
-                        pass
-                        #print 'skipped h-index %i and w-index %i for %i boundary points'%(ih_nb[j],iw_nb[j],np.count_nonzero(label_box==0.))
-                    window_count += 1
+                        #print 'skipped h-index %i and w-index %i'%(ih_nb[j],iw_nb[j])
+                else:
+                    pass
+                    #print 'skipped h-index %i and w-index %i for %i boundary points'%(ih_nb[j],iw_nb[j],np.count_nonzero(label_box==0.))
+                window_count += 1
+            """
+            
 
-        
+        """
         #-- testing data
         else:
             #-- NOTE the following assumes all images have the same dimensions to make things more efficient, but it can
@@ -126,7 +144,7 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
                         count += 1
             if count != n*tot_windows:
                 sys.exit('Error in counting. Some test data was not read correctly.')
-
+        """
     print images['train'][0].shape
     print images['test'][0].shape
 
