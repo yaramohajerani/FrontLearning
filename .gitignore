@@ -5,3 +5,4 @@
 *.pdf
 *.pyc
 *.DS_Store
+.vscode
