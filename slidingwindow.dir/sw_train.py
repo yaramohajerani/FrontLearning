@@ -21,12 +21,16 @@ from PIL import Image
 from keras import backend as K
 from tensorflow.python.client import device_lib
 import tensorflow as tf
+from sklearn.utils import class_weight
+
 #-- Print backend information
 print 'device information: ', device_lib.list_local_devices()
 print 'available GPUs: ', K.tensorflow_backend._get_available_gpus()
 
 #-- read in images
 def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
+    #-- total pixels from given parameters
+    tot_pixels = (2*HH+1)*(2*HW+1)
     #-- make subdirectories for input images
     ddir = {}
     ddir['train'] = trn_dir
@@ -62,90 +66,11 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
                 images[d][j] = img[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
                 label_box = lbl[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
                 count_boundary = np.count_nonzero(label_box==0.)
-                #-- if there is any pixel from a boundary, mark as boundary
-                if count_boundary > 0:
+                #-- mark as boundary if the boundary pixels compose at least 1% of the image
+                if count_boundary > 0.01*tot_pixels:
                     labels[d][j] = 1
                 else:
                     labels[d][j] = 0
-
-            #-- the following commented block is kept for reference, but it's a different approach where we pick equal numbers
-            #-- of windows CENTERED on the boundary and points not including any boundary. The downside is the NN gets used to 
-            #-- the boundary being in the middle, which is not helpful when finding boundaries in test data.
-            """
-            ih,iw = np.squeeze(np.nonzero(lbl==0.))
-            ih_nb,iw_nb = np.squeeze(np.nonzero(lbl==1.))
-
-            #-- sample more points so we can skip the ones that are close to the edge
-            inds_boundary = random.sample(np.arange(0,len(ih)),4*n_windows)
-            inds_nb = random.sample(np.arange(0,len(ih_nb)),4*n_windows)
-            #-- fill boundary elements
-            window_count = 0 #-- window count
-            success_count = 0 #-- successful counts
-            while success_count < n_windows:
-                j = inds_boundary[window_count]
-                try:
-                    images[d][i*n_windows+success_count] = img[ih[j]-HH:ih[j]+HH+1,iw[j]-HW:iw[j]+HW+1]
-                    labels[d][i*n_windows+success_count] = 1
-                    success_count += 1
-                except:
-                    pass
-                    #print 'skipped h-index %i and w-index %i'%(ih[j],iw[j])
-                window_count += 1
-            #-- fill non-boundary elements
-            window_count = 0 #-- window count
-            success_count = 0 #-- successful counts
-            while success_count < n_windows:
-                j = inds_nb[window_count]
-                #-- if any part of the boundary is in the box, ignore it
-                label_box = lbl[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
-                if np.count_nonzero(label_box==0.) == 0:
-                    try:
-                        images[d][i*n_windows+success_count] = img[ih_nb[j]-HH:ih_nb[j]+HH+1,iw_nb[j]-HW:iw_nb[j]+HW+1]
-                        labels[d][i*n_windows+success_count] = 0
-                        success_count += 1
-                    except:
-                        pass
-                        #print 'skipped h-index %i and w-index %i'%(ih_nb[j],iw_nb[j])
-                else:
-                    pass
-                    #print 'skipped h-index %i and w-index %i for %i boundary points'%(ih_nb[j],iw_nb[j],np.count_nonzero(label_box==0.))
-                window_count += 1
-            """
-            
-
-        """
-        #-- testing data
-        else:
-            #-- NOTE the following assumes all images have the same dimensions to make things more efficient, but it can
-            #-- easily be changed if this is not the case.
-            #-- calculate how many windows the whole image breaks down into
-            window_h = 2*HH + 1
-            window_w = 2*HW + 1
-            tot_windows = (img.shape[0] / window_h ) * (img.shape[1] / window_w )
-            images[d] = np.zeros((n * tot_windows, window_h , window_w))
-            labels[d] = np.zeros(n * tot_windows)
-            count = 0
-            for i,f in enumerate(files):
-                #-- same file name but different directories for images and labels
-                img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
-                lbl = np.array(Image.open(os.path.join(ddir[d],'labels',f.replace('Subset','Front'))).convert('L'))/255.
-
-                for ih in range(0,img.shape[0] - window_h, window_h):
-                    for iw in range(0,img.shape[1] - window_w, window_w):
-                        images[d][count] = img[ih : ih + window_h , iw : iw + window_w]
-                        label_box = lbl[ih : ih + window_h , iw : iw + window_w]
-                        count_boundary = np.count_nonzero(label_box==0.)
-                        #-- if there is any pixel from a boundary, mark as boundary
-                        if count_boundary > 0:
-                            labels[d][count] = 1
-                        else:
-                            labels[d][count] = 0
-                        count += 1
-            if count != n*tot_windows:
-                sys.exit('Error in counting. Some test data was not read correctly.')
-        """
-    print images['train'][0].shape
-    print images['test'][0].shape
 
     return [images,labels]
 
@@ -154,11 +79,13 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
 def train_model(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
-    HW = np.int(parameters['HALF_WIDTH']) #-- suggested 10
-    HH = np.int(parameters['HALF_HEIGHT']) #-- suggested 10
+    HW = np.int(parameters['HALF_WIDTH']) 
+    HH = np.int(parameters['HALF_HEIGHT'])
     n_windows = np.int(parameters['N_WINDOWS'])
     EPOCHS = np.int(parameters['EPOCHS'])
+    BATCHES = np.int(parameters['BATCHES'])
     n_relu = np.int(parameters['N_RELU'])
+    imb_w = np.int(parameters['IMBALANCE_RATIO'])
 
     #-- directory setup
     #- current directory
@@ -179,9 +106,18 @@ def train_model(parameters):
         keras.layers.Dense(2, activation=tf.nn.softmax)
     ])
 
+    #-- set up class weight to deal with imbalance
+    if imb_w == 0:
+        class_weights = dict(enumerate(class_weight.compute_class_weight('balanced',
+            np.unique(labels['train']),labels['train'])))
+    else:
+        class_weights = {0: 1.,1: imb_w}
+
+    print class_weights
+
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%iepochs_%iHH_%iHW_%inwindows_%irelu%s.h5'\
-        %(EPOCHS,HH,HW,n_windows,n_relu,suffix))
+    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%ibtch_%iepochs_%iHH_%iHW_%inwindows_%irelu_%iimbalance%s.h5'\
+        %(BATCHES,EPOCHS,HH,HW,n_windows,n_relu,imb_w,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -195,7 +131,8 @@ def train_model(parameters):
             model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
                 verbose=1, save_best_only=True)
             #-- now fit the model
-            model.fit(images['train'],labels['train'],epochs=EPOCHS,verbose=1,callbacks=[model_checkpoint])
+            model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
+                validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[model_checkpoint])
         else:
             # Compile model
             model.compile(optimizer='adam', 
@@ -213,7 +150,8 @@ def train_model(parameters):
             loss='sparse_categorical_crossentropy',
             metrics=['accuracy'])
         #-- now fit the model
-        model.fit(images['train'],labels['train'],epochs=EPOCHS,verbose=1,callbacks=[model_checkpoint])
+        model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
+            validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[model_checkpoint])
 
     print('Model is trained. Running on test data...')
 

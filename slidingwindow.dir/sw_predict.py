@@ -82,7 +82,9 @@ def draw_boundary(parameters):
     n_windows = np.int(parameters['N_WINDOWS'])
     n_windows_predict = np.int(parameters['N_WINDOWS_PREDICT'])
     EPOCHS = np.int(parameters['EPOCHS'])
+    BATCHES = np.int(parameters['BATCHES'])
     n_relu = np.int(parameters['N_RELU'])
+    imb_w = np.int(parameters['IMBALANCE_RATIO'])
 
     #-- directory setup
     #- current directory
@@ -104,8 +106,8 @@ def draw_boundary(parameters):
     ])
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%iepochs_%iHH_%iHW_%inwindows_%irelu%s.h5'\
-        %(EPOCHS,HH,HW,n_windows,n_relu,suffix))
+    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%ibtch_%iepochs_%iHH_%iHW_%inwindows_%irelu_%iimbalance%s.h5'\
+        %(BATCHES,EPOCHS,HH,HW,n_windows,n_relu,imb_w,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -126,10 +128,10 @@ def draw_boundary(parameters):
         for i in range(len(images[d])):
             pred = model.predict(images[d][i])
 
-            
+            print pred[:,1]
             #-- get the boxes that have boundaries
-            ind = np.nonzero(pred[:,1] > 0.)
-            print pred[ind,1]
+            ind = np.nonzero(pred[:,1] >= 0.5)
+
             #-- plot the center of each box that has a boundary
             hcntr = np.mean(hbnds[d][i][ind],axis=1)
             wcntr = np.mean(wbnds[d][i][ind],axis=1)
