@@ -114,7 +114,7 @@ def train_model(parameters):
     print('height=%i'%height)
 
     #-- import mod
-    unet = imp.load_source('unet_model', os.path.join(current_dir,'frontlearn_unet_dynamic.py'))
+    unet = imp.load_source('unet_model', os.path.join(current_dir,'unet_model.py'))
     model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
         n_init=n_init,n_layers=n_layers,drop=drop)
 

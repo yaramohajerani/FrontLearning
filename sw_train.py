@@ -90,7 +90,7 @@ def train_model(parameters):
     #-- directory setup
     #- current directory
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    ddir = os.path.join(current_dir,'..','%s.dir'%glacier)
+    ddir = os.path.join(current_dir,'%s.dir'%glacier)
     data_dir = os.path.join(ddir, 'data')
     trn_dir = os.path.join(data_dir,'train')
     tst_dir = os.path.join(data_dir,'test')
