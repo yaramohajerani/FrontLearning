@@ -47,7 +47,6 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
         #-- now make sliding window data
         #-- note first half is centered on boundaries and the second half is not
         #-------------------------------------------------------------------------------------------------------------------------
-        #-- for training data we sample randomly, but for testing data we break down the whole iamge into windows
         labels[d] = np.zeros(n*n_windows)
         images[d] = np.zeros((n*n_windows, 2*HH + 1 , 2*HW + 1))
         #-- get indices of boundaery for each image and select from them randomly
@@ -68,7 +67,7 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
                     labels[d][j] = 1
                 else:
                     labels[d][j] = 0
-                    
+
             #-- the following commented block is kept for reference, but it's a different approach where we pick equal numbers
             #-- of windows CENTERED on the boundary and points not including any boundary. The downside is the NN gets used to 
             #-- the boundary being in the middle, which is not helpful when finding boundaries in test data.
@@ -160,7 +159,6 @@ def train_model(parameters):
     n_windows = np.int(parameters['N_WINDOWS'])
     EPOCHS = np.int(parameters['EPOCHS'])
     n_relu = np.int(parameters['N_RELU'])
-    n_softmax = np.int(parameters['N_SOFTMAX'])
 
     #-- directory setup
     #- current directory
@@ -178,12 +176,12 @@ def train_model(parameters):
     model = keras.Sequential([
         keras.layers.Flatten(input_shape=(2*HH+1, 2*HW+1)),
         keras.layers.Dense(n_relu, activation=tf.nn.relu),
-        keras.layers.Dense(n_softmax, activation=tf.nn.softmax)
+        keras.layers.Dense(2, activation=tf.nn.softmax)
     ])
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%iepochs_%iHH_%iHW_%inwindows_%irelu_%isoftmax%s.h5'\
-        %(EPOCHS,HH,HW,n_windows,n_relu,n_softmax,suffix))
+    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%iepochs_%iHH_%iHW_%inwindows_%irelu%s.h5'\
+        %(EPOCHS,HH,HW,n_windows,n_relu,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
