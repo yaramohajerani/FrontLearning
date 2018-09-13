@@ -44,7 +44,7 @@ def load_data(suffix,ddir,n_windows_predict,HH,HW):
     #-- initialize dicttionaries
     images = {} 
     labels = {}
-    for d in ['test','train']:
+    for d in ['test']:#,'train']:
         subdir = os.path.join(ddir[d],'images%s'%(suffix))
         #-- get a list of the input files
         file_list = glob(os.path.join(subdir,'*.png'))
@@ -119,8 +119,6 @@ def draw_boundary(parameters):
     HH = np.int(parameters['HALF_HEIGHT']) #-- suggested 10
     n_windows = np.int(parameters['N_WINDOWS'])
     n_windows_predict = np.int(parameters['N_WINDOWS_PREDICT'])
-    EPOCHS = np.int(parameters['EPOCHS'])
-    BATCHES = np.int(parameters['BATCHES'])
     n_init = np.int(parameters['N_INIT'])
     imb_w = np.int(parameters['IMBALANCE_RATIO'])
     reg = np.float(parameters['REGULARIZATION'])
@@ -165,13 +163,13 @@ def draw_boundary(parameters):
         sys.exit('Did not find check points. Need to training model first.')
 
     #-- make predictions
-    for d in ['test','train']:
+    for d in ['test']:#,'train']:
         #-- loop through images
         for i in range(len(images[d])):
             pred = model.predict(images[d][i])
 
             #-- get the boxes that have boundaries
-            ind = np.nonzero(pred[:,1] > 0.5)
+            ind = np.nonzero(pred[:,1] > 0.9)
 
             #-- plot the center of each box that has a boundary
             hcntr = np.mean(hbnds[d][i][ind],axis=1)
