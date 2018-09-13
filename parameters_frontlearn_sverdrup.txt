@@ -8,7 +8,8 @@ N_INIT	40	#-- starting number of convolution filters in the first layer (i.e. ou
 DROPOUT 0.2       #-- dropout fraction. 0 for no dropout
 HALF_WIDTH      20
 HALF_HEIGHT     20
-N_WINDOWS       300
+N_WINDOWS       200
 N_WINDOWS_PREDICT       300       
 N_RELU 128
 IMBALANCE_RATIO 0
+REGULARIZATION  1e-6
