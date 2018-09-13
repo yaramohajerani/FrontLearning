@@ -34,14 +34,14 @@ print 'device information: ', device_lib.list_local_devices()
 print 'available GPUs: ', K.tensorflow_backend._get_available_gpus()
 
 #-- read in images
-def load_data(suffix,ddir,n_windows,HH,HW):
+def load_data(suffix,ddir,n_windows,HH,HW,crop_str):
     #-- total pixels from given parameters
     tot_pixels = (2*HH+1)*(2*HW+1)
     #-- initialize dicttionaries
     images = {} 
     labels = {}
     for d in ['train','test']:
-        subdir = os.path.join(ddir[d],'images%s'%(suffix))
+        subdir = os.path.join(ddir[d],'images%s%s'%(suffix,crop_str))
         #-- get a list of the input files
         file_list = glob(os.path.join(subdir,'*.png'))
         #-- get just the file names
@@ -59,7 +59,7 @@ def load_data(suffix,ddir,n_windows,HH,HW):
         for i,f in enumerate(files):
             #-- same file name but different directories for images and labels
             img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
-            lbl = np.array(Image.open(os.path.join(ddir[d],'labels',f.replace('Subset','Front'))).convert('L'))/255.
+            lbl = np.array(Image.open(os.path.join(ddir[d],'labels%s'%crop_str,f.replace('Subset','Front'))).convert('L'))/255.
 
             #-- take n_window random samples from the image
             ih = np.random.randint(HH,high=img.shape[0]-HH,size=n_windows)
@@ -115,6 +115,11 @@ def train_model(parameters):
     n_init = np.int(parameters['N_INIT'])
     imb_w = np.int(parameters['IMBALANCE_RATIO'])
     reg = np.float(parameters['REGULARIZATION'])
+    if parameters['CROP'] in ['Y','y']:
+        crop_str = '_cropped'
+        print('Using cropped data.')
+    else:
+        crop_str = ''
 
     #-- directory setup
     #- current directory
@@ -126,7 +131,7 @@ def train_model(parameters):
     ddir['test'] = os.path.join(data_dir,'test')
 
     #-- load images
-    [images,labels] = load_data(suffix,ddir,n_windows,HH,HW)
+    [images,labels] = load_data(suffix,ddir,n_windows,HH,HW,crop_str)
 
 
     #-- set up model
@@ -145,8 +150,8 @@ def train_model(parameters):
     print class_weights
 
     #-- checkpoint file
-    chk_file = os.path.join(glacier_ddir,'SW_frontlearn_cnn_model_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s.h5'\
-        %(HH,HW,n_windows,n_init,imb_str,reg,suffix))
+    chk_file = os.path.join(glacier_ddir,'SW_frontlearn_cnn_model_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s%s.h5'\
+        %(HH,HW,n_windows,n_init,imb_str,reg,suffix,crop_str))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -154,42 +159,35 @@ def train_model(parameters):
         # load weights
         model.load_weights(chk_file)
 
-        if parameters['RETRAIN'] in ['y','Y']:
-            #-- continue Training
-            #-- create checkpoint
-            #-- create checkpoint
-            model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
-                verbose=1, save_best_only=True)
-
-            lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
-                verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-            #-- now fit the model
-            model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
-                validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback,model_checkpoint])
-
-        else:
+        if parameters['RETRAIN'] in ['n','N']:
             # Compile model
             model.compile(optimizer='adam', 
                 loss='sparse_categorical_crossentropy',
                 metrics=['accuracy'])
-    #-- if not train model
-    else:
-        print('Did not find check points. Training model...')
-        #-- create checkpoint
-        #-- create checkpoint
-        model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
-            verbose=1, save_best_only=True)
 
-        lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
-            verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+            #-- test accuracy
+            test_loss, test_acc = model.evaluate(images['test'], labels['test'])
+            print('Test accuracy:', test_acc)
 
-        # Compile model
-        model.compile(optimizer='adam', 
-            loss='sparse_categorical_crossentropy',
-            metrics=['accuracy'])
-        #-- now fit the model
-        model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
-            validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback,model_checkpoint])
+            sys.exit('Retrain set to No. Exiting.')
+
+    #-- train model
+    print('Training model...')
+    #-- create checkpoint
+    #-- create checkpoint
+    model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
+        verbose=1, save_best_only=True)
+
+    lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
+        verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+
+    # Compile model
+    model.compile(optimizer='adam', 
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'])
+    #-- now fit the model
+    model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
+        validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback,model_checkpoint])
             
     #-- test accuracy
     test_loss, test_acc = model.evaluate(images['test'], labels['test'])

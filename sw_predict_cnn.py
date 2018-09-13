@@ -36,7 +36,7 @@ print 'device information: ', device_lib.list_local_devices()
 print 'available GPUs: ', K.tensorflow_backend._get_available_gpus()
 
 #-- read in images
-def load_data(suffix,ddir,n_windows_predict,HH,HW):
+def load_data(suffix,ddir,n_windows_predict,HH,HW,crop_str):
     #-- make subdirectories for input images
     files = {}
     hbnds = {}
@@ -45,7 +45,7 @@ def load_data(suffix,ddir,n_windows_predict,HH,HW):
     images = {} 
     labels = {}
     for d in ['test']:#,'train']:
-        subdir = os.path.join(ddir[d],'images%s'%(suffix))
+        subdir = os.path.join(ddir[d],'images%s%s'%(suffix,crop_str))
         #-- get a list of the input files
         file_list = glob(os.path.join(subdir,'*.png'))
         #-- get just the file names
@@ -69,7 +69,7 @@ def load_data(suffix,ddir,n_windows_predict,HH,HW):
             wbnds[d][i] = np.zeros((n_windows_predict,2))
             #-- same file name but different directories for images and labels
             img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
-            labels[d][i] = np.array(Image.open(os.path.join(ddir[d],'labels',\
+            labels[d][i] = np.array(Image.open(os.path.join(ddir[d],'labels%s'%crop_str,\
                 f.replace('Subset','Front'))).convert('L'))/255.
 
             #-- take n_windows_predict random samples from the image
@@ -115,13 +115,17 @@ def create_model(reg,input_shape,n_init):
 def draw_boundary(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
-    HW = np.int(parameters['HALF_WIDTH']) #-- suggested 10
-    HH = np.int(parameters['HALF_HEIGHT']) #-- suggested 10
+    HW = np.int(parameters['HALF_WIDTH']) 
+    HH = np.int(parameters['HALF_HEIGHT']) 
     n_windows = np.int(parameters['N_WINDOWS'])
     n_windows_predict = np.int(parameters['N_WINDOWS_PREDICT'])
     n_init = np.int(parameters['N_INIT'])
     imb_w = np.int(parameters['IMBALANCE_RATIO'])
     reg = np.float(parameters['REGULARIZATION'])
+    if parameters['CROP'] in ['Y','y']:
+        crop_str = '_cropped'
+    else:
+        crop_str = ''
 
     #-- directory setup
     #- current directory
@@ -133,7 +137,7 @@ def draw_boundary(parameters):
     ddir['test'] = os.path.join(data_dir,'test')
 
     #-- load images
-    images,labels,hbnds,wbnds,img_shape,files = load_data(suffix,ddir,n_windows_predict,HH,HW)
+    images,labels,hbnds,wbnds,img_shape,files = load_data(suffix,ddir,n_windows_predict,HH,HW,crop_str)
 
      #-- set up model
     model = create_model(reg,(2*HH+1, 2*HW+1,1),n_init)
@@ -146,8 +150,8 @@ def draw_boundary(parameters):
 
 
     #-- checkpoint file
-    chk_file = os.path.join(glacier_ddir,'SW_frontlearn_cnn_model_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s.h5'\
-        %(HH,HW,n_windows,n_init,imb_str,reg,suffix))
+    chk_file = os.path.join(glacier_ddir,'SW_frontlearn_cnn_model_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s%s.h5'\
+        %(HH,HW,n_windows,n_init,imb_str,reg,suffix,crop_str))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -169,7 +173,7 @@ def draw_boundary(parameters):
             pred = model.predict(images[d][i])
 
             #-- get the boxes that have boundaries
-            ind = np.nonzero(pred[:,1] > 0.9)
+            ind = np.nonzero(pred[:,1] > 0.95)
 
             #-- plot the center of each box that has a boundary
             hcntr = np.mean(hbnds[d][i][ind],axis=1)
@@ -244,8 +248,8 @@ def draw_boundary(parameters):
             plt.subplots_adjust(left=-0.1)
             #plt.show()
             #-- save
-            subdir = os.path.join(ddir[d],'output_SW_cnn_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s'\
-                %(HH,HW,n_windows,n_init,imb_str,reg,suffix))
+            subdir = os.path.join(ddir[d],'output_SW_cnn_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s%s'\
+                %(HH,HW,n_windows,n_init,imb_str,reg,suffix,crop_str))
             if not os.path.isdir(subdir):
                 os.mkdir(subdir)
             plt.savefig(os.path.join(subdir,'%s_postprocess.png'%(files[d][i][:-4])))
