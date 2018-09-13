@@ -11,7 +11,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 #-- set to True if want to look at plots
-PLOT = False
+PLOT = True
 glacier = 'Sverdrup'
 
 #-- directory setup

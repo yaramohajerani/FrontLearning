@@ -34,13 +34,9 @@ print 'device information: ', device_lib.list_local_devices()
 print 'available GPUs: ', K.tensorflow_backend._get_available_gpus()
 
 #-- read in images
-def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
+def load_data(suffix,ddir,n_windows,HH,HW):
     #-- total pixels from given parameters
     tot_pixels = (2*HH+1)*(2*HW+1)
-    #-- make subdirectories for input images
-    ddir = {}
-    ddir['train'] = trn_dir
-    ddir['test'] = tst_dir
     #-- initialize dicttionaries
     images = {} 
     labels = {}
@@ -84,27 +80,22 @@ def load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW):
 
 
 #-- create model
-def create_model(reg,input_shape):
+def create_model(reg,input_shape,n_init):
     model = Sequential()
-    model.add(Conv2D(32, (5, 5) ,padding='same',input_shape=input_shape))
+    model.add(Conv2D(n_init, (3, 3) ,padding='same',input_shape=input_shape))
     model.add(LeakyReLU(alpha=0.1))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.2))
 
-    model.add(Conv2D(64, (3, 3) ,padding='same'))
+    model.add(Conv2D(n_init*2, (3, 3) ,padding='same'))
     model.add(LeakyReLU(alpha=0.1))
     model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    model.add(Dropout(0.25))
-
-    # model.add(Conv2D(128, (3, 3) ,padding='same'))
-    # model.add(LeakyReLU(alpha=0.1))
-    # model.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
-    # model.add(Dropout(0.25))
+    model.add(Dropout(0.2))
 
     model.add(Flatten())
-    model.add(Dense(32, kernel_regularizer=l2(reg)))
+    model.add(Dense(n_init, kernel_regularizer=l2(reg)))
     model.add(LeakyReLU(alpha=0.1))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.2))
 
     model.add(Dense(2, kernel_regularizer=l2(reg)))
 
@@ -121,38 +112,41 @@ def train_model(parameters):
     n_windows = np.int(parameters['N_WINDOWS'])
     EPOCHS = np.int(parameters['EPOCHS'])
     BATCHES = np.int(parameters['BATCHES'])
-    n_relu = np.int(parameters['N_RELU'])
+    n_init = np.int(parameters['N_INIT'])
     imb_w = np.int(parameters['IMBALANCE_RATIO'])
     reg = np.float(parameters['REGULARIZATION'])
 
     #-- directory setup
     #- current directory
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    ddir = os.path.join(current_dir,'%s.dir'%glacier)
-    data_dir = os.path.join(ddir, 'data')
-    trn_dir = os.path.join(data_dir,'train')
-    tst_dir = os.path.join(data_dir,'test')
+    glacier_ddir = os.path.join(current_dir,'%s.dir'%glacier)
+    data_dir = os.path.join(glacier_ddir, 'data')
+    ddir = {}
+    ddir['train'] = os.path.join(data_dir,'train')
+    ddir['test'] = os.path.join(data_dir,'test')
 
     #-- load images
-    [images,labels] = load_data(suffix,trn_dir,tst_dir,n_windows,HH,HW)
+    [images,labels] = load_data(suffix,ddir,n_windows,HH,HW)
 
 
     #-- set up model
-    model = create_model(reg,(2*HH+1, 2*HW+1,1))
+    model = create_model(reg,(2*HH+1, 2*HW+1,1),n_init)
 
 
     #-- set up class weight to deal with imbalance
     if imb_w == 0:
         class_weights = dict(enumerate(class_weight.compute_class_weight('balanced',
             np.unique(labels['train']),labels['train'])))
+        imb_str = 'auto-'
     else:
         class_weights = {0: 1.,1: imb_w}
+        imb_str = str(imb_w)
 
     print class_weights
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'SW_frontlearn_weights_%ibtch_%iepochs_%iHH_%iHW_%inwindows_%irelu_%iimbalance_%.2f%s.h5'\
-        %(BATCHES,EPOCHS,HH,HW,n_windows,n_relu,imb_w,reg,suffix))
+    chk_file = os.path.join(glacier_ddir,'SW_frontlearn_cnn_model_%iHH_%iHW_%inwindows_%iinit_%simbalance_%.1e%s.h5'\
+        %(HH,HW,n_windows,n_init,imb_str,reg,suffix))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -163,19 +157,15 @@ def train_model(parameters):
         if parameters['RETRAIN'] in ['y','Y']:
             #-- continue Training
             #-- create checkpoint
-            # This callback reduces the learning rate when the training accuracy does not improve any more
+            #-- create checkpoint
+            model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
+                verbose=1, save_best_only=True)
+
             lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
                 verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-        
-            # Stops the training process upon convergence
-            stop_callback = EarlyStopping(monitor='acc', min_delta=0.0001, patience=11, verbose=1, mode='auto')
-
             #-- now fit the model
             model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
-                validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback, stop_callback])
-
-            #-- save model
-            model.save_weights(chk_file)
+                validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback,model_checkpoint])
 
         else:
             # Compile model
@@ -186,12 +176,12 @@ def train_model(parameters):
     else:
         print('Did not find check points. Training model...')
         #-- create checkpoint
-        # This callback reduces the learning rate when the training accuracy does not improve any more
+        #-- create checkpoint
+        model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
+            verbose=1, save_best_only=True)
+
         lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-    
-        # Stops the training process upon convergence
-        stop_callback = EarlyStopping(monitor='acc', min_delta=0.0001, patience=11, verbose=1, mode='auto')
 
         # Compile model
         model.compile(optimizer='adam', 
@@ -199,11 +189,8 @@ def train_model(parameters):
             metrics=['accuracy'])
         #-- now fit the model
         model.fit(images['train'],labels['train'],batch_size=BATCHES, epochs=EPOCHS, verbose=1,\
-            validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback, stop_callback])
-
-        #-- save model
-        model.save_weights(chk_file)
-
+            validation_split=0.1, shuffle=True,class_weight=class_weights,callbacks=[lr_callback,model_checkpoint])
+            
     #-- test accuracy
     test_loss, test_acc = model.evaluate(images['test'], labels['test'])
     print('Test accuracy:', test_acc)
