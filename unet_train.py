@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 u"""
-frontlearn_train_AUGMENT.py
+frontlearn_train.py
 by Yara Mohajerani (Last Update 09/2018)
 
 Train U-Net model in frontlearn_unet.py
@@ -28,7 +28,7 @@ print(K.tensorflow_backend._get_available_gpus())
 def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
     #-- make subdirectories for input images
     trn_subdir = os.path.join(trn_dir,'images%s%s'%(suffix,crop_str))
-    tst_subdir = os.path.join(tst_dir,'images%s%a'%(suffix,crop_str))
+    tst_subdir = os.path.join(tst_dir,'images%s%s'%(suffix,crop_str))
     #-- get a list of the input files
     trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
