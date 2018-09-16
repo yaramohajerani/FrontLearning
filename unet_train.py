@@ -7,6 +7,7 @@ Train U-Net model in frontlearn_unet.py
 
 Update History
         09/2018 Combine with original script and clean up
+                Add option for weighing white and black pixels separately
         05/2018 Forked from frontlearn_train.py
 """
 import os
@@ -20,6 +21,7 @@ from PIL import Image,ImageOps
 from keras import backend as K
 from tensorflow.python.client import device_lib
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
+from sklearn.utils import class_weight
 #-- Print backend information
 print(device_lib.list_local_devices())
 print(K.tensorflow_backend._get_available_gpus())
@@ -90,6 +92,20 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
     return {'trn_img':train_img.reshape(n,h_pad,w_pad,1),'trn_lbl':train_lbl.reshape(n,h_pad,w_pad,1),\
         'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'trn_names':trn_files,'tst_names':tst_files}
 
+
+def set_weights(lbls):
+    #-- count the proportion of white pixels to black pixels
+    white_tot = 0
+    black_tot = 0
+    tot_size = lbls.shape[1]*lbls.shape[2]
+    print 'total size =  %i x %i' %(lbls.shape[1],lbls.shape[2])
+    for i in range(len(lbls)):
+        white_count = np.count_nonzero(lbls[i])
+        white_tot += white_count
+        black_tot += tot_size - white_count
+    
+    return np.float(white_tot)/np.float(black_tot)
+
 def train_model(parameters):
     glacier = parameters['GLACIER_NAME']
     n_batch = int(parameters['BATCHES'])
@@ -98,6 +114,7 @@ def train_model(parameters):
     n_init = int(parameters['N_INIT'])
     suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
+    imb_w = np.int(parameters['IMBALANCE_RATIO'])
     if parameters['AUGMENT'] in ['Y','y']:
         augment = True
         aug_str = '_augment'
@@ -130,14 +147,26 @@ def train_model(parameters):
     print('width=%i'%width)
     print('height=%i'%height)
 
+    #-- set up class weight to deal with imbalance
+    class_weights = np.ones((2,))
+    if parameters['ADD_WEIGHTS'] in ['Y','y']:
+        if imb_w == 0:
+            class_weights[1] = set_weights(data['trn_lbl'])
+        else:
+            class_weights[1] = imb_w
+            imb_str = '_weighted'
+        imb_str = '_%.2fweight'%class_weights[1]
+    else:
+        imb_str = ''
+    print(class_weights)
     #-- import mod
     unet = imp.load_source('unet_model', os.path.join(current_dir,'unet_model.py'))
     model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
         n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s.h5'\
-        %(n_tot,n_init,drop_str,aug_str,suffix,crop_str))
+    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s%s.h5'\
+        %(n_tot,n_init,imb_str,drop_str,aug_str,suffix,crop_str))
 
     #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
@@ -154,7 +183,7 @@ def train_model(parameters):
                 verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
             #-- now fit the model
             model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-                validation_split=0.1, shuffle=True, callbacks=[lr_callback,model_checkpoint])
+                validation_split=0.1, shuffle=True, class_weight=class_weights, callbacks=[lr_callback,model_checkpoint])
         else:
             # Compile model (required to make predictions)
             model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -168,7 +197,7 @@ def train_model(parameters):
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
         #-- now fit the model
         model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.1, shuffle=True, callbacks=[lr_callback,model_checkpoint])
+            validation_split=0.1, shuffle=True, class_weight=class_weights, callbacks=[lr_callback,model_checkpoint])
 
     print('Model is trained. Running on test data...')
 
@@ -187,8 +216,8 @@ def train_model(parameters):
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ilayers_%iinit%s%s%s%s'\
-            %(n_tot,n_init,drop_str,aug_str,suffix,crop_str)
+        out_subdir = 'output_%ilayers_%iinit%s%s%s%s%s'\
+            %(n_tot,n_init,imb_str,drop_str,aug_str,suffix,crop_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

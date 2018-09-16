@@ -1,19 +1,43 @@
 #!/usr/bin/env python
 u"""
 frontlearn_unet_dynamic.py
-by Yara Mohajerani (04/2018)
+by Yara Mohajerani (Last Update 09/2018)
 
 Construct a dynamic u-net model with a variable
 number of layers for glacier calving front detection.
 
 Update History
-        04/2014 Written
+        09/2018 Add custom loss functin with weights for 
+                black and white pixels
+        04/2018 Written
 """
+from keras import backend as K
 import keras.layers as kl
 import keras.models as km
 import copy
 
-def unet_model(height=0,width=0,channels=1,n_init=12,n_layers=2,drop=0):
+def weighted_binary_crossentropy(weights):
+    """
+    note the weighted binary cross entopy loss would be
+     alpha.ytrue.log(ypred) + beta.(1 - ytrue)*log(1 - ypred)
+
+    so alpha would be the weight of getting white pixels wrong (ytrue=1)
+    and beta is the weight of getting black pixels  wrong (ytue=0)
+
+    since we don't want ot miss any boundary points, we want to increase
+    beta in this case.
+    """
+    w = K.variable(weights)
+
+    def loss(y_true, y_pred):
+        if y_true == 1:
+            return -K.log(y_pred)*w[0]
+        else:
+            return -K.log(1 - y_pred)*w[1]
+    
+    return loss
+
+def unet_model(height=0,width=0,channels=1,n_init=12,n_layers=2,drop=0,weights=[1,1]):
 
     #-- define input
     inputs = kl.Input((height,width,channels))
@@ -69,8 +93,8 @@ def unet_model(height=0,width=0,channels=1,n_init=12,n_layers=2,drop=0):
     #-- make model
     model = km.Model(input=inputs,output=c[i])
     #-- compile model
-    model.compile(loss='binary_crossentropy',optimizer='adam',\
-        metrics=['accuracy'])
+    loss = weighted_binary_crossentropy(weights)
+    model.compile(loss=loss,optimizer='adam', metrics=['accuracy'])
 
     #-- return model
     return [model,i]
