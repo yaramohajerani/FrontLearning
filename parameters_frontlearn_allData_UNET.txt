@@ -1,12 +1,11 @@
 GLACIER_NAME	all_data
-EPOCHS	200
+EPOCHS	100
 BATCHES	10
-LAYERS_DOWN	5	#-- number of layers DOWNWARD, not the total # of convolution layers
+LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
 N_INIT	32	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
-DROPOUT 0.2       #-- dropout fraction. 0 for no dropout
-SUFFIX	_equalize_autocontrast_smooth_edgeEnhance	#input/out suffix
+DROPOUT 0       #-- dropout fraction. 0 for no dropout
+SUFFIX  _equalize_autocontrast_smooth_edgeEnhance	#_autocontrast_equalize_edgeEnhance      #input/out suffix
 RETRAIN	N
-DROPOUT 0.2       #-- dropout fraction. 0 for no dropout
 HALF_WIDTH      20
 HALF_HEIGHT     20
 N_WINDOWS       300
@@ -14,5 +13,7 @@ N_WINDOWS_PREDICT       2000
 ADD_WEIGHTS     Y
 IMBALANCE_RATIO 0
 REGULARIZATION  1e-6
+NORMALIZE       Y
 CROP    Y
 AUGMENT N
+LINEAR  N

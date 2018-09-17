@@ -8,7 +8,6 @@ Train U-Net model in frontlearn_unet.py
 Update History
         09/2018 Combine with original script and clean up
                 Add option for weighing white and black pixels separately
-                Add options for importing different models from the model file
         05/2018 Forked from frontlearn_train.py
 """
 import os
@@ -90,16 +89,16 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
     for i in range(n_test):
         test_img[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(tst_list[i]).convert('L'))/255.
 
-    return {'trn_img':train_img.reshape(n,h_pad,w_pad,1),'trn_lbl':train_lbl.reshape(n,h_pad*w_pad,1),\
+    return {'trn_img':train_img.reshape(n,h_pad,w_pad,1),'trn_lbl':train_lbl.reshape(n,h_pad,w_pad,1),\
         'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'trn_names':trn_files,'tst_names':tst_files}
 
-#-- find ratio of white to black pixels (no boundary to boundary)
-def set_ratio(lbls):
+
+def set_weights(lbls):
     #-- count the proportion of white pixels to black pixels
     white_tot = 0
     black_tot = 0
-    tot_size = lbls.shape[1]
-    print 'total size =  ', lbls.shape[1]
+    tot_size = lbls.shape[1]*lbls.shape[2]
+    print 'total size =  %i x %i' %(lbls.shape[1],lbls.shape[2])
     for i in range(len(lbls)):
         white_count = np.count_nonzero(lbls[i])
         white_tot += white_count
@@ -107,24 +106,6 @@ def set_ratio(lbls):
     
     return np.float(white_tot)/np.float(black_tot)
 
-#-- set weight matrix for samples
-def set_weights(lbls,ratio):
-    #-- get rid of last dimensin
-    lbls = lbls.reshape(lbls.shape[0],\
-        lbls.shape[1])#,lbls.shape[2])
-    #-- initialize weights
-    w = np.ones((lbls.shape))
-    #-- loop through images
-    for i in range(lbls.shape[0]):
-        #-- flatten out image and get indices of boundaries
-        ind = np.nonzero(lbls[i] == 0.)
-        w[i][ind] *= ratio
-
-    print 'weight: ', ratio
-    print 'weight shape: ', w.shape
-    return w
-
-#-- train model and make predictions
 def train_model(parameters):
     glacier = parameters['GLACIER_NAME']
     n_batch = int(parameters['BATCHES'])
@@ -134,7 +115,6 @@ def train_model(parameters):
     suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
     imb_w = float(parameters['IMBALANCE_RATIO'])
-    #-- set up configurations based on parameters
     if parameters['AUGMENT'] in ['Y','y']:
         augment = True
         aug_str = '_augment'
@@ -146,24 +126,6 @@ def train_model(parameters):
         crop_str = '_cropped'
     else:
         crop_str = ''
-    
-    if parameters['NORMALIZE'] in ['y','Y']:
-        normalize = True
-        norm_str = '_normalized'
-    else:
-        normalize = False
-        norm_str = ''
-    
-    linear = False
-    if parameters['LINEAR'] in ['Y','Y']:
-        linear = True
-
-    drop_str = ''
-    if drop>0:
-        drop_str = '_w%.1fdrop'%drop
-
-    if (normalize) and (drop!=0):
-        sys.exit('Both batch normalization and dropout are selecte. Choose one.')
 
     #-- directory setup
     #- current directory
@@ -173,6 +135,11 @@ def train_model(parameters):
     trn_dir = os.path.join(data_dir,'train')
     tst_dir = os.path.join(data_dir,'test')
 
+    #-- set up labels from parameters
+    drop_str = ''
+    if drop>0:
+        drop_str = '_w%.1fdrop'%drop
+
     #-- load images
     data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str)
 
@@ -180,50 +147,48 @@ def train_model(parameters):
     print('width=%i'%width)
     print('height=%i'%height)
 
-    #-- set up sample weight to deal with imbalance
+    #-- set up class weight to deal with imbalance
+    class_weights = np.ones((height,width,2))
     if parameters['ADD_WEIGHTS'] in ['Y','y']:
         if imb_w == 0:
-            ratio = set_ratio(data['trn_lbl'])
+            class_weights[:,:,1] = set_weights(data['trn_lbl'])
         else:
-            ratio = imb_w
-        sample_weights = set_weights(data['trn_lbl'], ratio)
-        imb_str = '_%.2fweight'%ratio
+            class_weights[:,:,1] = imb_w
+        imb_str = '_%.2fweight'%class_weights[0,0,1]
     else:
         imb_str = ''
 
     #-- import mod
     unet = imp.load_source('unet_model', os.path.join(current_dir,'unet_model.py'))
-    if normalize:
-        model = unet.unet_model_double_normalized(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers)
-        print('importing unet_model_double_normalized')
-    elif linear:
-        model = unet.unet_model_linear_dropout(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers,drop=drop)
-        print('importing unet_model_linear_dropout')
-    else:
-        model = unet.unet_model_double_dropout(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers,drop=drop)
-        print('importing unet_model_double_dropout')
-
-
-    #-- compile imported model
-    model.compile(loss='binary_crossentropy',optimizer='adam', metrics=['accuracy']\
-        ,sample_weight_mode="temporal")
+    model,n_tot = unet.unet_model(height=height,width=width,channels=channels,\
+        n_init=n_init,n_layers=n_layers,drop=drop)
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s%s%s.h5'\
-        %(n_layers,n_init,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s%s.h5'\
+        %(n_tot,n_init,imb_str,drop_str,aug_str,suffix,crop_str))
 
-    #-- if file exists, read model from file
+    #-- if file exists, just read model from file
     if os.path.isfile(chk_file):
         print('Check point exists; loading model from file.')
         # load weights
         model.load_weights(chk_file)
-        
+
+        if parameters['RETRAIN'] in ['y','Y']:
+            #-- continue Training
+            #-- create checkpoint
+            model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
+                verbose=1, save_best_only=True)
+            lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
+                verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+            #-- now fit the model
+            model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
+                validation_split=0.1, shuffle=True, class_weight=class_weights, callbacks=[lr_callback,model_checkpoint])
+        else:
+            # Compile model (required to make predictions)
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     #-- if not train model
-    if (parameters['RETRAIN'] in ['y','Y']) or (not os.path.isfile(chk_file)):
-        print('Training model...')
+    else:
+        print('Did not find check points. Training model...')
         #-- create checkpoint
         model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
             verbose=1, save_best_only=True)
@@ -231,7 +196,7 @@ def train_model(parameters):
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
         #-- now fit the model
         model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,model_checkpoint])
+            validation_split=0.1, shuffle=True, class_weight=class_weights, callbacks=[lr_callback,model_checkpoint])
 
     print('Model is trained. Running on test data...')
 
@@ -249,11 +214,9 @@ def train_model(parameters):
     for t in ['test']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
-        out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
-        print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ilayers_%iinit%s%s%s%s%s%s'\
-            %(n_layers,n_init,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
+        out_subdir = 'output_%ilayers_%iinit%s%s%s%s%s'\
+            %(n_tot,n_init,imb_str,drop_str,aug_str,suffix,crop_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image
