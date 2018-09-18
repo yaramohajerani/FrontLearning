@@ -124,7 +124,8 @@ def train_model(parameters):
     #-- directory setup
     #- current directory
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    glacier_ddir = os.path.join(current_dir,'%s.dir'%glacier)
+    main_dir = os.path.join(current_dir,'..','FrontLearning_data')
+    glacier_ddir = os.path.join(main_dir,'%s.dir'%glacier)
     data_dir = os.path.join(glacier_ddir, 'data')
     ddir = {}
     ddir['train'] = os.path.join(data_dir,'train')
