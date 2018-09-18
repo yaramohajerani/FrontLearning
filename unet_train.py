@@ -154,9 +154,12 @@ def train_model(parameters):
         normalize = False
         norm_str = ''
     
-    linear = False
     if parameters['LINEAR'] in ['Y','Y']:
         linear = True
+        lin_str = '_linear'
+    else:
+        linear = False
+        lin_str = ''
 
     drop_str = ''
     if drop>0:
@@ -194,17 +197,23 @@ def train_model(parameters):
     #-- import mod
     unet = imp.load_source('unet_model', os.path.join(current_dir,'unet_model.py'))
     if normalize:
-        model = unet.unet_model_double_normalized(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers)
-        print('importing unet_model_double_normalized')
-    elif linear:
-        model = unet.unet_model_linear_dropout(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers,drop=drop)
-        print('importing unet_model_linear_dropout')
+        if linear:
+            model = unet.unet_model_linear_normalized(height=height,width=width,channels=channels,\
+                n_init=n_init,n_layers=n_layers)
+            print('importing unet_model_linear_normalized')
+        else:
+            model = unet.unet_model_double_normalized(height=height,width=width,channels=channels,\
+                n_init=n_init,n_layers=n_layers)
+            print('importing unet_model_double_normalized')
     else:
-        model = unet.unet_model_double_dropout(height=height,width=width,channels=channels,\
-            n_init=n_init,n_layers=n_layers,drop=drop)
-        print('importing unet_model_double_dropout')
+        if linear:
+            model = unet.unet_model_linear_dropout(height=height,width=width,channels=channels,\
+                n_init=n_init,n_layers=n_layers,drop=drop)
+            print('importing unet_model_linear_dropout')
+        else:
+            model = unet.unet_model_double_dropout(height=height,width=width,channels=channels,\
+                n_init=n_init,n_layers=n_layers,drop=drop)
+            print('importing unet_model_double_dropout')
 
 
     #-- compile imported model
@@ -212,8 +221,8 @@ def train_model(parameters):
         ,sample_weight_mode="temporal")
 
     #-- checkpoint file
-    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s%s%s.h5'\
-        %(n_layers,n_init,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+    chk_file = os.path.join(ddir,'unet_model_weights_%ilayers_%iinit%s%s%s%s%s%s%s.h5'\
+        %(n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
 
     #-- if file exists, read model from file
     if os.path.isfile(chk_file):
@@ -252,8 +261,8 @@ def train_model(parameters):
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ilayers_%iinit%s%s%s%s%s%s'\
-            %(n_layers,n_init,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
+        out_subdir = 'output_%ilayers_%iinit%s%s%s%s%s%s%s'\
+            %(n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image
