@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/anaconda2/bin/python2.7
 u"""
 crop_output.py
 by Yara Mohajerani

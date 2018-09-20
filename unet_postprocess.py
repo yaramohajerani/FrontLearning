@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/anaconda2/bin/python2.7
 u"""
 frontlearn_postprocess.py
 by Yara Mohajerani
