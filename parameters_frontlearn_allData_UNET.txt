@@ -1,4 +1,4 @@
-GLACIER_NAME	all_data
+GLACIER_NAME	all_data2
 EPOCHS	100
 BATCHES	10
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
@@ -17,5 +17,5 @@ NORMALIZE       N
 CROP    Y
 AUGMENT N
 LINEAR  N
-imb_str 81.68   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
-THRESHOLD       0.8     #-- threshold for post-processing
+#imb_str 81.68   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
+#THRESHOLD       0.8     #-- threshold for post-processing

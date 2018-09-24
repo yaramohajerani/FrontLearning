@@ -56,8 +56,8 @@ def enhance_images(sharpness,contrast,glacier):
     images,names = load_data(trn_dir,tst_dir)
     #-- make output directory dictionary
     outdir = {}
-    outdir['train'] = os.path.join(trn_dir,'images_autocontrast_equalize_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
-    outdir['test'] = os.path.join(tst_dir,'images_autocontrast_equalize_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
+    outdir['train'] = os.path.join(trn_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
+    outdir['test'] = os.path.join(tst_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
     #-- loop through train and test data
     for t in ['train','test']:
         if (not os.path.isdir(outdir[t])):
@@ -76,8 +76,8 @@ def enhance_images(sharpness,contrast,glacier):
             final = im.filter(ImageFilter.SMOOTH)#.filter(ImageFilter.EDGE_ENHANCE)
             '''
             #final = ImageOps.autocontrast(ImageOps.equalize(m.convert('L'))).filter(ImageFilter.SMOOTH).filter(ImageFilter.EDGE_ENHANCE)
-            #final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.SMOOTH).filter(ImageFilter.EDGE_ENHANCE)
-            final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.EDGE_ENHANCE)
+            final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.SMOOTH).filter(ImageFilter.EDGE_ENHANCE)
+            #final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.EDGE_ENHANCE)
 
             #final = ImageOps.autocontrast(m.convert('L')).filter(ImageFilter.EDGE_ENHANCE)
             #-- write image to file
