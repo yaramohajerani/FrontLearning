@@ -4,6 +4,12 @@ createRotatedTrainingData.py
 by Michael Wood (Last update 09/2018 by Yara Mohajerani)
 Create the rotated training data
 
+To run, specify the glaciers, coast, and image dimeions; e.g:
+"
+python createRotatedTrainingData.py --glaciers=Sverdrup,Jakobshavn 
+    --coasts=NW,CW --dimensions=2,3
+"
+
 Update History
     09/2018 Clean up and add to pipline (Yara Mohajerani)
     04/2018 Written (Michael Wood)

@@ -17,5 +17,5 @@ NORMALIZE       N
 CROP    Y
 AUGMENT N
 LINEAR  N
-#imb_str 81.68   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
-#THRESHOLD       0.8     #-- threshold for post-processing
+imb_str 82.22   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
+THRESHOLD       0.     #-- threshold for post-processing
