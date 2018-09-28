@@ -1,4 +1,4 @@
-GLACIER_NAME	all_data
+GLACIER_NAME	all_data2
 EPOCHS	100
 BATCHES	10
 LAYERS_DOWN	5	#-- number of layers DOWNWARD, not the total # of convolution layers

@@ -20,6 +20,9 @@ from skimage.morphology import skeletonize
 from skimage.future import graph
 from skimage import data, segmentation, color, filters, io
 import sklearn.neighbors
+from skimage.filters import sobel
+
+PLOT = False
 
 #-- read in images
 def load_data(suffix,ddir):
@@ -46,6 +49,7 @@ def load_data(suffix,ddir):
 def train_model(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
+    filter = parameters['FILTER']
 
     #-- directory setup
     #- current directory
@@ -60,76 +64,93 @@ def train_model(parameters):
     #-- load images
     [images,files] = load_data(suffix,ddir)
 
-    sigma = 3
+    sigma = 2
     #-- go through each image and adjust the sigma until a contiuous front is obtained
     for d in ['test']:
-        #-- make output directory
-        out_subdir = 'output_canny%s'%suffix
-        if (not os.path.isdir(os.path.join(ddir[d],out_subdir))):
-            os.mkdir(os.path.join(ddir[d],out_subdir))
-        #-- make fronts and save to file    
-        for i in range(len(images[d])):
-            front = feature.canny(images[d][i], sigma=sigma)
-            #scipy.misc.imsave(os.path.join(ddir[d],out_subdir,'%s'%files[d][i].replace('_Subset',''))\
-            #    , front)
+        if filter =='canny':
+            #-- make output directory
+            out_subdir = 'output_canny%s'%suffix
+            if (not os.path.isdir(os.path.join(ddir[d],out_subdir))):
+                os.mkdir(os.path.join(ddir[d],out_subdir))
+            #-- make fronts and save to file    
+            for i in range(len(images[d])):
 
-            #-- break down image into individual lines by getting indices that are no more than 1 pixel away
-            #-- from each other. Note 'front' is a boolean array (True / 1 for boundary)
-            #-- note that the indices are not in order of radial distance so first we need to sort the points one 
-            #-- by one based on distance
-            indices = np.squeeze(np.nonzero(front)).transpose() # dimensions = num_pts x 2
-            #-- counter for segments
-            s = 0 
-            #-- start with the 0 point and add it to the ordered list and then delete
-            ind = 0
-            #-- dictionary for indices of segments. Add first point to segment 0
-            seg = {}
-            seg[s] = [indices[ind,:]]
-            indices = np.delete(indices,ind,0)
-            #-- loop through points until there are no more points left
-            while len(indices) > 0:
-                #-- use Ball Tree to search for nearest point to the last point of the current segment
-                tree = sklearn.neighbors.BallTree(indices, metric='euclidean')
-                dist,ind = tree.query(seg[s][-1].reshape(1,2), k=1)
-                #-- assign new point and delete it
-                if np.squeeze(dist) <=2.:
-                    seg[s].append(indices[ind])
-                else:
-                    s += 1
-                    seg[s] = [indices[ind]]
-                indices = np.delete(indices,ind,0)
-                
+            
+                front = feature.canny(images[d][i], sigma=sigma)
 
-            #-- now plot the longest segment
-            lens = [len(seg[k]) for k in seg.keys()]
-            #ind_sorted = np.argsort(lens)
-            #max_ind = ind_sorted[-2] 
-            max_ind = np.argmax(lens)
-            new_im = np.zeros(front.shape)
-            for pix_count in range(lens[max_ind]):
-                new_im[np.squeeze(np.squeeze(seg[max_ind])[pix_count])[0],\
-                    np.squeeze(np.squeeze(seg[max_ind])[pix_count])[1]] = 1.
+                scipy.misc.imsave(os.path.join(ddir[d],out_subdir,'%s'%files[d][i].replace('_Subset',''))\
+                    , front)
 
+                if PLOT:    
+                    #-- break down image into individual lines by getting indices that are no more than 1 pixel away
+                    #-- from each other. Note 'front' is a boolean array (True / 1 for boundary)
+                    #-- note that the indices are not in order of radial distance so first we need to sort the points one 
+                    #-- by one based on distance
+                    indices = np.squeeze(np.nonzero(front)).transpose() # dimensions = num_pts x 2
+                    #-- counter for segments
+                    s = 0 
+                    #-- start with the 0 point and add it to the ordered list and then delete
+                    ind = 0
+                    #-- dictionary for indices of segments. Add first point to segment 0
+                    seg = {}
+                    seg[s] = [indices[ind,:]]
+                    indices = np.delete(indices,ind,0)
+                    #-- loop through points until there are no more points left
+                    while len(indices) > 0:
+                        #-- use Ball Tree to search for nearest point to the last point of the current segment
+                        tree = sklearn.neighbors.BallTree(indices, metric='euclidean')
+                        dist,ind = tree.query(seg[s][-1].reshape(1,2), k=1)
+                        #-- assign new point and delete it
+                        if np.squeeze(dist) <=2.:
+                            seg[s].append(indices[ind])
+                        else:
+                            s += 1
+                            seg[s] = [indices[ind]]
+                        indices = np.delete(indices,ind,0)
+                        
 
-            # display results
-            fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(8, 3),
-                                                sharex=True, sharey=True)
+                    #-- now plot the longest segment
+                    lens = [len(seg[k]) for k in seg.keys()]
+                    #ind_sorted = np.argsort(lens)
+                    #max_ind = ind_sorted[-2] 
+                    max_ind = np.argmax(lens)
+                    new_im = np.zeros(front.shape)
+                    for pix_count in range(lens[max_ind]):
+                        new_im[np.squeeze(np.squeeze(seg[max_ind])[pix_count])[0],\
+                            np.squeeze(np.squeeze(seg[max_ind])[pix_count])[1]] = 1.
 
-            ax1.imshow(images[d][i], cmap=plt.cm.gray)
-            ax1.axis('off')
-            ax1.set_title('noisy image', fontsize=20)
+                    
+                    # display results
+                    fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(8, 3),
+                                                        sharex=True, sharey=True)
 
-            ax2.imshow(front, cmap=plt.cm.gray)
-            ax2.axis('off')
-            ax2.set_title('Canny filter, $\sigma=%i$'%sigma, fontsize=20)
+                    ax1.imshow(images[d][i], cmap=plt.cm.gray)
+                    ax1.axis('off')
+                    ax1.set_title('noisy image', fontsize=20)
 
-            ax3.imshow(new_im, cmap=plt.cm.gray)
-            ax3.axis('off')
-            ax3.set_title('longest line', fontsize=20)
+                    ax2.imshow(front, cmap=plt.cm.gray)
+                    ax2.axis('off')
+                    ax2.set_title('Canny filter, $\sigma=%i$'%sigma, fontsize=20)
 
-            fig.tight_layout()
+                    ax3.imshow(new_im, cmap=plt.cm.gray)
+                    ax3.axis('off')
+                    ax3.set_title('longest line', fontsize=20)
 
-            plt.show()
+                    fig.tight_layout()
+
+                    plt.show()
+
+        elif filter == 'sobel':
+             #-- make output directory
+            out_subdir = 'output_sobel%s'%suffix
+            if (not os.path.isdir(os.path.join(ddir[d],out_subdir))):
+                os.mkdir(os.path.join(ddir[d],out_subdir))
+            #-- make fronts and save to file    
+            for i in range(len(images[d])):
+                front = sobel(images[d][i])
+                scipy.misc.imsave(os.path.join(ddir[d],out_subdir,'%s'%files[d][i].replace('_Subset',''))\
+                    , front)
+
 
 
 
