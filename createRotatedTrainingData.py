@@ -15,6 +15,7 @@ Update History
     04/2018 Written (Michael Wood)
 """
 import os
+import getopt
 import matplotlib.pyplot as plt
 import numpy as np
 from osgeo import ogr

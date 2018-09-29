@@ -1,6 +1,6 @@
 #!/anaconda2/bin/python2.7
 u"""
-sckikit_canny.py
+analytical_filters.py
 by Yara Mohajerani (Last Update 09/2018)
 
 Use Canny edge detector from sckikit-image to detect edges
@@ -12,7 +12,7 @@ import os
 import sys
 import numpy as np
 from glob import glob
-from PIL import Image
+from PIL import Image, ImageFilter
 from skimage import feature
 import matplotlib.pyplot as plt
 import scipy.misc
@@ -21,6 +21,7 @@ from skimage.future import graph
 from skimage import data, segmentation, color, filters, io
 import sklearn.neighbors
 from skimage.filters import sobel
+from scipy import ndimage
 
 PLOT = False
 
@@ -46,7 +47,7 @@ def load_data(suffix,ddir):
     return [images,files]
 
 #-- train model and make predictions
-def train_model(parameters):
+def run_filter(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
     filter = parameters['FILTER']
@@ -64,7 +65,7 @@ def train_model(parameters):
     #-- load images
     [images,files] = load_data(suffix,ddir)
 
-    sigma = 2
+    sigma = 3
     #-- go through each image and adjust the sigma until a contiuous front is obtained
     for d in ['test']:
         if filter =='canny':
@@ -147,7 +148,23 @@ def train_model(parameters):
                 os.mkdir(os.path.join(ddir[d],out_subdir))
             #-- make fronts and save to file    
             for i in range(len(images[d])):
+                #-- using scikit image sobel filter
                 front = sobel(images[d][i])
+                #-- invert image colors
+                front = 1 - front
+                #-- set threshold
+                #ind = np.where(front >= 0.8)
+                #front[ind] = 1
+
+                #-- using scipy sobel filter
+                #dx=  ndimage.sobel(images[d][i], 0)  # horizontal derivative
+                #dy = ndimage.sobel(images[d][i], 1)  # vertical derivative
+                #front = np.hypot(dx, dy) 
+
+                #-- using FIL edge detector
+                #im = Image.fromarray(np.uint8(images[d][i]*255.))
+                #front = im.filter(ImageFilter.FIND_EDGES)
+
                 scipy.misc.imsave(os.path.join(ddir[d],out_subdir,'%s'%files[d][i].replace('_Subset',''))\
                     , front)
 
@@ -179,7 +196,7 @@ def main():
             fid.close()
 
             #-- pass parameters to training function
-            train_model(parameters)
+            run_filter(parameters)
 
 if __name__ == '__main__':
     main()

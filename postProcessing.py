@@ -1,5 +1,14 @@
-#code to find path of least resistance through an image
+#!/anaconda2/bin/python2.7
+u"""
+sckikit_canny.py
+by Michael Wood (Last Updated by Yara Mohajerani 09/2018)
 
+find path of least resistance through an image
+
+Update History
+        09/2018 - Yara: Clean up and add user input
+        09/2018 - Michael: written
+"""
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -9,22 +18,9 @@ import os
 from osgeo import ogr
 from osgeo import osr
 import urllib
+import getopt
+import sys
 
-#############################################################################################
-#############################################################################################
-# User Inputs
-
-glacier='Helheim'
-method='CNN'
-
-headDirectory='/Users/mhwood/Documents/Research/Projects/Front Learning'
-
-glaciersFolder=headDirectory+'/Glaciers'
-
-labelFolder=headDirectory+'/Results/Helheim Results/'+method
-
-postProcessedOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Post-Processed'
-shapefileOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Shapefile'
 
 #############################################################################################
 #############################################################################################
@@ -44,6 +40,7 @@ def generateLabelList(labelFolder):
 
 def obtainSceneCornersProjection(glacier,sceneID,glaciersFolder):
     f=open(glaciersFolder+'/'+glacier+'/'+glacier+' Image Data.csv')
+    print 'read %s'%(glaciersFolder+'/'+glacier+'/'+glacier+' Image Data.csv')
     lines=f.read()
     f.close()
     lines=lines.split('\n')
@@ -131,6 +128,9 @@ def fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,imageSize):
     boundary1=np.genfromtxt(boundary1file,delimiter=',')
     boundary2file = glaciersFolder + '/' + glacier + '/Fjord Boundaries/' + glacier + ' Boundary 2.csv'
     boundary2 = np.genfromtxt(boundary2file, delimiter=',')
+
+    print 'read %s'%(glaciersFolder+'/'+glacier+'/Fjord Boundaries/'+glacier+' Boundary 1.csv')
+    print 'read %s'%(glaciersFolder + '/' + glacier + '/Fjord Boundaries/' + glacier + ' Boundary 2.csv')
 
     boundary1=seriesToNPoints(boundary1,1000)
     boundary2 = seriesToNPoints(boundary2, 1000)
@@ -280,32 +280,63 @@ def solutionToShapefile(glacier,labels,frontIndices,shapefileOutputFolder, corne
 
 #############################################################################################
 # All of the functions are run here
+#-- main function to get user input and make training data
+def main():
+    #-- Read the system arguments listed after the program
+    long_options = ['glaciers=','method=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:',long_options)
 
-labelList=generateLabelList(labelFolder)
+    glacier= 'Helheim'
+    method = 'CNN'
+    for opt, arg in optlist:
+        if opt in ('-G','--glaciers'):
+            glacier = arg
+        elif opt in ('-M','--method'):
+            method = arg
 
-frontIndicesList=[]
-cornersList=[]
-projectionList=[]
-imageSizeList=[]
-for label in labelList:
-    print('Working on label '+label)
-    if method=='CNN':
-        im=Image.open(labelFolder+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
-    if method == 'Sobel':
-        im = Image.open(labelFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
+    #-- directory setup
+    #- current directory
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    headDirectory = os.path.join(current_dir,'..','FrontLearning_data')
 
-    corners,projection=obtainSceneCornersProjection(glacier,label,glaciersFolder)
-    cornersList.append(corners)
-    projectionList.append(projection)
-    imageSizeList.append(im.size)
+    glaciersFolder=headDirectory+'/Glaciers'
 
-    boundary1pixels,boundary2pixels=fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,im.size)
-    # plotImageWithBoundaries(im,boundary1pixels,boundary2pixels)
+    labelFolder=headDirectory+'/Results/Helheim Results/'+method
 
-    solutionIndices = leastCostSolution(im,boundary1pixels,boundary2pixels)
-    frontIndicesList.append(solutionIndices)
+    postProcessedOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Post-Processed'
+    shapefileOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Shapefile'
+    
 
-    outputSolutionIndicesPng(im,solutionIndices,postProcessedOutputFolder,label)
-    # plotImageWithSolution(im,solutionIndices)
+    labelList=generateLabelList(labelFolder)
 
-solutionToShapefile(glacier, labelList, frontIndicesList, shapefileOutputFolder, cornersList, projectionList, imageSizeList)
+    frontIndicesList=[]
+    cornersList=[]
+    projectionList=[]
+    imageSizeList=[]
+    for label in labelList:
+        print('Working on label '+label)
+        if method=='CNN':
+            im=Image.open(labelFolder+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
+        if method == 'Sobel':
+            im = Image.open(labelFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
+
+        corners,projection=obtainSceneCornersProjection(glacier,label,glaciersFolder)
+        cornersList.append(corners)
+        projectionList.append(projection)
+        imageSizeList.append(im.size)
+
+        boundary1pixels,boundary2pixels=fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,im.size)
+        #
+        plotImageWithBoundaries(im,boundary1pixels,boundary2pixels)
+
+        solutionIndices = leastCostSolution(im,boundary1pixels,boundary2pixels)
+        frontIndicesList.append(solutionIndices)
+
+        outputSolutionIndicesPng(im,solutionIndices,postProcessedOutputFolder,label)
+        #
+        plotImageWithSolution(im,solutionIndices)
+
+    solutionToShapefile(glacier, labelList, frontIndicesList, shapefileOutputFolder, cornersList, projectionList, imageSizeList)
+
+if __name__ == '__main__':
+    main()
