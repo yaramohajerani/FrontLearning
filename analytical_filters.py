@@ -51,6 +51,7 @@ def run_filter(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
     filter = parameters['FILTER']
+    threshold = np.float(parameters['THRESHOLD'])
 
     #-- directory setup
     #- current directory
@@ -142,8 +143,11 @@ def run_filter(parameters):
                     plt.show()
 
         elif filter == 'sobel':
+            threshold_str = ''
+            if threshold != 0:
+                threshold_str = '_%.2fthreshold'%threshold
              #-- make output directory
-            out_subdir = 'output_sobel%s'%suffix
+            out_subdir = 'output_sobel%s%s'%(threshold_str,suffix)
             if (not os.path.isdir(os.path.join(ddir[d],out_subdir))):
                 os.mkdir(os.path.join(ddir[d],out_subdir))
             #-- make fronts and save to file    
@@ -152,9 +156,11 @@ def run_filter(parameters):
                 front = sobel(images[d][i])
                 #-- invert image colors
                 front = 1 - front
-                #-- set threshold
-                #ind = np.where(front >= 0.8)
-                #front[ind] = 1
+                if threshold != 0:
+                    #-- set threshold
+                    ind = np.where(front >= threshold)
+                    front[ind] = 1.
+             
 
                 #-- using scipy sobel filter
                 #dx=  ndimage.sobel(images[d][i], 0)  # horizontal derivative
