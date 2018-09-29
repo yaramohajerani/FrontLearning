@@ -44,7 +44,7 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
     n = len(trn_files)
     if augment:
         #-- need to triple for the extra two augmentations
-        n *= 3
+        n *= 2
     #-- get dimensions, force to 1 b/w channel
     im_shape = np.array(Image.open(trn_list[0]).convert('L')).shape
     h,w = im_shape
@@ -77,9 +77,9 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
         count += 1
         if augment:
             #-- INVERT COLORS
-            train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
-            train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
-            count += 1
+            #train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
+            #train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
+            #count += 1
             #-- MIRROR HORIZONTALLY
             train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
             train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
