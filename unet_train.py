@@ -257,7 +257,7 @@ def train_model(parameters):
     names['train'] = data['trn_names']
     names['test'] = data['tst_names']
     #-- Now test the model on both the test data and the train data
-    for t in ['test']:
+    for t in ['train','test']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])

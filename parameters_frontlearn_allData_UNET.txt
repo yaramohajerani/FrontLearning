@@ -1,6 +1,6 @@
 GLACIER_NAME	all_data2
 EPOCHS	100
-BATCHES	3
+BATCHES	10
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
 N_INIT	32	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
 DROPOUT 0.2       #-- dropout fraction. 0 for no dropout
