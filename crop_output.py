@@ -65,7 +65,7 @@ def post_process(parameters):
     ddir['train'] = os.path.join(data_dir,'train')
     ddir['test'] = os.path.join(data_dir,'test')
     
-    for d in ['test','train']:
+    for d in ['test']:#,'train']:
         #-- read in output data of the neural network
         subdir = os.path.join(ddir[d],'output_%ibatches_%ilayers_%iinit%s%s%s%s%s%s%s'\
                 %(n_batch,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
