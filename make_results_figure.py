@@ -17,8 +17,8 @@ main_dir = os.path.join(current_dir,'..','FrontLearning_data')
 glacier_ddir = os.path.join(main_dir,'all_data2.dir')
 ddir = os.path.join(glacier_ddir, 'data/test')
 
-prefix = 'LE07_L1TP_233013_20000331_20170212_01_T2_B8'
-fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(10, 8),
+prefix = 'LT05_L1TP_233013_19890629_20170202_01_T1_B2' #'LE07_L1TP_233013_20000331_20170212_01_T2_B8'
+fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(7, 9),
                                     sharex=True, sharey=True)
 
 #-- make custom colormap for final panel (comparison)
@@ -51,7 +51,7 @@ f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_augm
 l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_5layers_40init_86.60weight_w0.5drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_5layers_40init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
@@ -87,19 +87,19 @@ ax[0,2].set_title(r"$\bf{b)}$" + " True Front", fontsize=12, color='navy')
 
 #-- 4 layer standard
 ax[1,0].imshow(l4_noAug, cmap=plt.cm.gray)
-ax[1,0].set_title(r"$\bf{c)}$" + " Chosen NN", fontsize=12, color='navy')
+ax[1,0].set_title(r"$\bf{c)}$" + " No Augmentation", fontsize=12, color='navy')
 
 #-- 4 layer aug x2
 ax[1,1].imshow(l4_augx2, cmap=plt.cm.gray)
-ax[1,1].set_title(r"$\bf{d)}$" + " Augmented:\nHorizontal Flip", fontsize=12, color='navy')
+ax[1,1].set_title(r"$\bf{d)}$" + " Augmented:\nMirrored", fontsize=12, color='navy')
 
 #-- 4 layer aug x3
 ax[1,2].imshow(l4_augx3, cmap=plt.cm.gray)
-ax[1,2].set_title(r"$\bf{e)}$" + " Augmented:\nHorizontal Flip & Inversion", fontsize=12, color='navy')
+ax[1,2].set_title(r"$\bf{e)}$" + " Augmented:\nMirrored & Inverted", fontsize=12, color='navy')
 
 #-- 5 layer 
 ax[1,3].imshow(l5_noAug, cmap=plt.cm.gray)
-ax[1,3].set_title(r"$\bf{f)}$" + " 37 Layers\n0.5 Dropout", fontsize=12, color='navy')
+ax[1,3].set_title(r"$\bf{f)}$" + " 37 Layers\n640 Channels", fontsize=12, color='navy')
 
 #-- 4 layer 30 batches
 ax[2,0].imshow(l4_30b, cmap=plt.cm.gray)
@@ -127,9 +127,9 @@ out_nn[ind2] = 0.6
 ax[3,1].imshow(out_nn, cmap=my_cm)
 ax[3,1].set_title(r"$\bf{k)}$" + " NN Comparison", fontsize=12, color='navy')
 #-- make fake legend
-ax[3,1].plot([],[],'-r',label='NN Post-processed')
+ax[3,1].plot([],[],'-r',label='NN\nPost-processed')
 ax[3,1].plot([],[],'-b',label='True Front')
-ax[3,1].legend(loc='upper right', bbox_to_anchor=(1, 0.5))
+ax[3,1].legend(loc='lower center',framealpha=1.0)
 
 
 #-- sobel post processed
@@ -142,14 +142,31 @@ out_s[ind2] = 0.6
 ax[3,2].imshow(out_s, cmap=my_cm)
 ax[3,2].set_title(r"$\bf{l)}$" + " Sobel Comparison", fontsize=12, color='navy')
 #-- make fake legend
-ax[3,2].plot([],[],'-r',label='Sobel Post-processed')
+ax[3,2].plot([],[],'-r',label='Sobel\nPost-processed')
 ax[3,2].plot([],[],'-b',label='True Front')
-ax[3,2].legend(loc='upper right', bbox_to_anchor=(1, 0.5))
+ax[3,2].legend(loc='lower center',framealpha=1.0)
 
 for i in range(4):
     for j in range(4):
-        ax[i,j].axis('off')
+        #ax[i,j].axis('off')
         ax[i,j].axis('equal')
+        ax[i,j].get_xaxis().set_ticks([])
+        ax[i,j].get_yaxis().set_ticks([])
+        ax[i,j].spines['top'].set_visible(True)
+        ax[i,j].spines['right'].set_visible(True)
+        ax[i,j].spines['bottom'].set_visible(True)
+        ax[i,j].spines['left'].set_visible(True)
+        ax[i,j].spines['bottom'].set_color('0.5')
+        ax[i,j].spines['top'].set_color('0.5')
+        ax[i,j].spines['right'].set_color('0.5')
+        ax[i,j].spines['left'].set_color('0.5')
+
+#-- no axes for hidden plots
+ax[0,0].axis('off')
+#ax[0,1].axis('off')
+ax[0,3].axis('off')
+ax[3,0].axis('off')
+ax[3,3].axis('off')
 fig.tight_layout()
 #plt.show()
 plt.savefig(os.path.join(ddir,'Figure_3.pdf'),format='pdf',dpi=300)
