@@ -27,7 +27,8 @@ from tensorflow.python.client import device_lib
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
-
+import matplotlib
+matplotlib.use('Agg') #-- noninteractive backend for GP
 
 #-- Print backend information
 print(device_lib.list_local_devices())
@@ -253,7 +254,7 @@ def train_model(parameters):
             verbose=1, save_best_only=True)
         lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-        es_callback = EarlyStopping(monitor='val_loss',min_delta=0,patience=3,
+        es_callback = EarlyStopping(monitor='val_loss',min_delta=0.0001, patience=5,
             verbose=1, mode='auto')
         #-- now fit the model
         history = model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
