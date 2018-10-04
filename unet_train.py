@@ -152,6 +152,7 @@ def train_model(parameters):
         aug_str = '_augment-x%i'%aug_config
     else:
         augment = False
+        aug_config = 0
         aug_str = ''
     
     if parameters['CROP'] in ['Y','y']:
@@ -251,9 +252,11 @@ def train_model(parameters):
             verbose=1, save_best_only=True)
         lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
+        es_callback = EarlyStopping(monitor='val_loss',min_delta=0,patience=3,
+            verbose=1, mode='auto')
         #-- now fit the model
         history = model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,model_checkpoint])
+            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,es_callback,model_checkpoint])
 
         #-- Make plots for training history
         for item,name in zip(['acc','loss'],['Accuracy','Loss']):
@@ -263,12 +266,12 @@ def train_model(parameters):
             plt.title('Model %s'%name)
             plt.ylabel(name)
             plt.xlabel('Epochs')
-            plt.legend(['train', 'test'], loc='upper left')
+            plt.legend(['Training', 'Validation'], loc='upper left')
             plt.savefig(os.path.join(glacier_ddir,\
-                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
-                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
+                'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
+                %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
                 aug_str,suffix,crop_str)),format='pdf')
-            plt.close()
+            plt.close(fig)
 
     print('Model is trained. Running on test data...')
 

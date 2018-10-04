@@ -1,8 +1,8 @@
 GLACIER_NAME	all_data2
 EPOCHS	3
-BATCHES	10
-LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
-N_INIT	32	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
+BATCHES	60
+LAYERS_DOWN	2	#-- number of layers DOWNWARD, not the total # of convolution layers
+N_INIT	5	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
 DROPOUT 0.2      #-- dropout fraction. 0 for no dropout
 SUFFIX  _equalize_autocontrast_smooth_edgeEnhance	#_autocontrast_equalize_edgeEnhance      #input/out suffix
 RETRAIN	N
@@ -10,7 +10,7 @@ ADD_WEIGHTS     Y
 IMBALANCE_RATIO 0
 NORMALIZE       N
 CROP    Y
-AUGMENT Y
+AUGMENT N
 AUG_CONFIG  2
 LINEAR  N
 FILTER  sobel
