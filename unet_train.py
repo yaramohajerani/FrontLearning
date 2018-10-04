@@ -180,6 +180,12 @@ def train_model(parameters):
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
+    #-- plotting
+    if parameters['PLOT'] in ['y','Y']:
+        PLOT = True
+    else:
+        PLOT = False
+
     if (normalize) and (drop!=0):
         sys.exit('Both batch normalization and dropout are selecte. Choose one.')
 
@@ -254,26 +260,38 @@ def train_model(parameters):
             verbose=1, save_best_only=True)
         lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-        es_callback = EarlyStopping(monitor='val_loss',min_delta=0.0001, patience=5,
-            verbose=1, mode='auto')
+        #es_callback = EarlyStopping(monitor='val_loss',min_delta=0.0001, patience=5,
+        #    verbose=1, mode='auto')
         #-- now fit the model
         history = model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,es_callback,model_checkpoint])
+            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,model_checkpoint])
+
+        #-- save history to file
+        outfile = open(os.path.join(glacier_ddir,\
+                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.txt'\
+                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
+                aug_str,suffix,crop_str)),'w')
+        outfile.write('Epoch loss\tval_loss\tacc\tval_acc\n')
+        for i in range(len(history.history['loss'])):
+            outfile.write('%i\t%f\t%f\t%f\t%f\n'%(i,history.history['loss'][i],history.history['val_loss'][i],\
+                history.history['acc'][i],history.history['val_acc'][i]))
+        outfile.close()
 
         #-- Make plots for training history
-        for item,name in zip(['acc','loss'],['Accuracy','Loss']):
-            fig = plt.figure(1,figsize=(8,6))
-            plt.plot(history.history[item])
-            plt.plot(history.history['val_%s'%item])
-            plt.title('Model %s'%name)
-            plt.ylabel(name)
-            plt.xlabel('Epochs')
-            plt.legend(['Training', 'Validation'], loc='upper left')
-            plt.savefig(os.path.join(glacier_ddir,\
-                'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
-                %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-                aug_str,suffix,crop_str)),format='pdf')
-            plt.close(fig)
+        if PLOT:
+            for item,name in zip(['acc','loss'],['Accuracy','Loss']):
+                fig = plt.figure(1,figsize=(8,6))
+                plt.plot(history.history[item])
+                plt.plot(history.history['val_%s'%item])
+                plt.title('Model %s'%name)
+                plt.ylabel(name)
+                plt.xlabel('Epochs')
+                plt.legend(['Training', 'Validation'], loc='upper left')
+                plt.savefig(os.path.join(glacier_ddir,\
+                    'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
+                    %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
+                    aug_str,suffix,crop_str)),format='pdf')
+                plt.close(fig)
 
     print('Model is trained. Running on test data...')
 
