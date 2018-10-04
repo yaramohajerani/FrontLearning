@@ -94,6 +94,7 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str):
                 #-- MIRROR HORIZONTALLY
                 train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
                 train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
+		count += 1
 
     #-- also get the test data
     n_test = len(tst_files)
