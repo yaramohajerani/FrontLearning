@@ -13,6 +13,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+#from scipy.interpolate import spline
 
 #-- train model and make predictions
 def plot_history(parameters):
@@ -81,11 +82,17 @@ def plot_history(parameters):
         aug_str,suffix,crop_str))
 
     history = pd.read_table(infile,delim_whitespace=True)
-
+    epochs = history['Epoch'] + 1 #- start from 1 instead of 0
     for item,name in zip(['acc','loss'],['Accuracy','Loss']):
         fig = plt.figure(1,figsize=(8,6))
-        plt.plot(history['Epoch'],history[item])
-        plt.plot(history['Epoch'],history['val_%s'%item])
+        plt.plot(epochs,history[item],'b-')
+        plt.plot(epochs,history['val_%s'%item],'r-')
+        #-- also plot smoothd lines
+        epoch_smooth = np.linspace(np.min(history['Epoch']),np.max(history['Epoch']),100)
+        #smooth = spline(epochs,history[item],epoch_smooth)
+        #smooth_val = spline(epochs,history['val_%s'%item],epoch_smooth)
+        #plt.plot(epoch_smooth,smooth,'b:')
+        #plt.plot(epoch_smooth,smooth_val,'r:')
         plt.title('Model %s'%name)
         plt.ylabel(name)
         plt.xlabel('Epochs')

@@ -41,7 +41,7 @@ f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_equa
 l4_noAug = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx2 = np.array(Image.open(f).convert('L'))/255.
 
@@ -55,7 +55,7 @@ f = os.path.join(ddir,'output_10batches_5layers_40init_86.60weight_w0.2drop_equa
     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_3b = np.array(Image.open(f).convert('L'))/255.
 
@@ -103,11 +103,11 @@ ax[1,3].set_title(r"$\bf{f)}$" + " 37 Layers\n640 Channels", fontsize=12, color=
 
 #-- 4 layer 30 batches
 ax[2,0].imshow(l4_30b, cmap=plt.cm.gray)
-ax[2,0].set_title(r"$\bf{g)}$" + " 30 batches", fontsize=12, color='navy')
+ax[2,0].set_title(r"$\bf{g)}$" + " batch-size 30", fontsize=12, color='navy')
 
 #-- 4 layer 3 batches
 ax[2,1].imshow(l4_3b, cmap=plt.cm.gray)
-ax[2,1].set_title(r"$\bf{h)}$" + " 3 batches", fontsize=12, color='navy')
+ax[2,1].set_title(r"$\bf{h)}$" + " batch-size 3", fontsize=12, color='navy')
 
 #-- 4 layer no weight
 ax[2,2].imshow(l4_noweight, cmap=plt.cm.gray)
