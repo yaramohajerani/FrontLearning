@@ -6,6 +6,8 @@ by Yara Mohajerani (Last Update 09/2018)
 Train U-Net model in frontlearn_unet.py
 
 Update History
+        10/2018 Add training plots (histroy of loss and acc)
+                Add option for # of alterations in augmentation
         09/2018 Combine with original script and clean up
                 Add option for weighing white and black pixels separately
                 Add options for importing different models from the model file
@@ -24,12 +26,15 @@ from keras import backend as K
 from tensorflow.python.client import device_lib
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from sklearn.utils import class_weight
+import matplotlib.pyplot as plt
+
+
 #-- Print backend information
 print(device_lib.list_local_devices())
 print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
+def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str):
     #-- make subdirectories for input images
     trn_subdir = os.path.join(trn_dir,'images%s%s'%(suffix,crop_str))
     tst_subdir = os.path.join(tst_dir,'images%s%s'%(suffix,crop_str))
@@ -44,7 +49,7 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
     n = len(trn_files)
     if augment:
         #-- need to triple for the extra two augmentations
-        n *= 3
+        n *= aug_config
     #-- get dimensions, force to 1 b/w channel
     im_shape = np.array(Image.open(trn_list[0]).convert('L')).shape
     h,w = im_shape
@@ -76,14 +81,19 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str):
         train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
         count += 1
         if augment:
-            #-- INVERT COLORS
-            train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
-            train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
-            count += 1
-            #-- MIRROR HORIZONTALLY
-            train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
-            train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
-            count += 1
+            if aug_config == 3:
+                #-- INVERT COLORS
+                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
+                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
+                count += 1
+                #-- MIRROR HORIZONTALLY
+                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
+                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
+                count += 1
+            elif aug_config == 2:
+                #-- MIRROR HORIZONTALLY
+                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
+                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
 
     #-- also get the test data
     n_test = len(tst_files)
@@ -138,7 +148,8 @@ def train_model(parameters):
     #-- set up configurations based on parameters
     if parameters['AUGMENT'] in ['Y','y']:
         augment = True
-        aug_str = '_augment'
+        aug_config = np.int(parameters['AUG_CONFIG'])
+        aug_str = '_augment-x%i'%aug_config
     else:
         augment = False
         aug_str = ''
@@ -179,7 +190,7 @@ def train_model(parameters):
     tst_dir = os.path.join(data_dir,'test')
 
     #-- load images
-    data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,crop_str)
+    data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str)
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
@@ -241,8 +252,23 @@ def train_model(parameters):
         lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
             verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
         #-- now fit the model
-        model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
+        history = model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
             validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,model_checkpoint])
+
+        #-- Make plots for training history
+        for item,name in zip(['acc','loss'],['Accuracy','Loss']):
+            fig = plt.figure(1,figsize=(8,6))
+            plt.plot(history.history[item])
+            plt.plot(history.history['val_%s'%item])
+            plt.title('Model %s'%name)
+            plt.ylabel(name)
+            plt.xlabel('Epochs')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join(glacier_ddir,\
+                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
+                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
+                aug_str,suffix,crop_str)),format='pdf')
+            plt.close()
 
     print('Model is trained. Running on test data...')
 
