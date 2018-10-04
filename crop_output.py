@@ -1,12 +1,13 @@
 #!/anaconda2/bin/python2.7
 u"""
 crop_output.py
-by Yara Mohajerani
+by Yara Mohajerani (last update 10/2018)
 
 remove padding and recrop to get back to original size. 
 remove faint points
 
 History
+    10/2018 Update augment string
     09/2018 Written
 """
 import os
@@ -32,8 +33,10 @@ def post_process(parameters):
         threshold_str = 'nothreshold'
     #-- set up configurations based on parameters
     if parameters['AUGMENT'] in ['Y','y']:
-        aug_str = '_augment'
+        aug_config = np.int(parameters['AUG_CONFIG'])
+        aug_str = '_augment-x%i'%aug_config
     else:
+        aug_config = 0
         aug_str = ''
     
     if parameters['CROP'] in ['Y','y']:
