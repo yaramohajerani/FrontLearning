@@ -1,17 +1,26 @@
-#code to find path of least resistance through an image
+#!/anaconda2/bin/python2.7
+u"""
+sckikit_canny.py
+by Michael Wood (Last Updated by Yara Mohajerani 09/2018)
 
+find path of least resistance through an image
+
+Update History
+        09/2018 - Yara: Clean up and add user input
+        09/2018 - Michael: written
+"""
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from skimage.graph import route_through_array
 import shapefile
 import os
-import sys
-import getopt
 from osgeo import ogr
 from osgeo import osr
 import urllib
-from pyproj import Proj,transform
+import getopt
+import sys
+
 
 #############################################################################################
 #############################################################################################
@@ -31,6 +40,7 @@ def generateLabelList(labelFolder):
 
 def obtainSceneCornersProjection(glacier,sceneID,glaciersFolder):
     f=open(glaciersFolder+'/'+glacier+'/'+glacier+' Image Data.csv')
+    print 'read %s'%(glaciersFolder+'/'+glacier+'/'+glacier+' Image Data.csv')
     lines=f.read()
     f.close()
     lines=lines.split('\n')
@@ -65,17 +75,21 @@ def geoCoordsToImagePixels(coords,corners, projection, imageSize):
     return(np.array(imagePixels))
 
 def reprojectPolygon(polygon,inputCRS,outputCRS):
-    inProj = Proj(init='epsg:'+str(inputCRS))
-    outProj = Proj(init='epsg:'+str(outputCRS))
-    x1,y1 = -11705274.6374,4826473.6922
-    x2,y2 = transform(inProj,outProj,x1,y1)
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(inputCRS)
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(outputCRS)
+    transform = osr.CoordinateTransformation(source, target)
     outputPolygon=[]
     for point in polygon:
         x = point[0]
         y = point[1]
-        x2,y2 = transform(inProj,outProj,x,y)
-        outputPolygon.append([x2,y2])
-
+        WKTinput = "POINT (" + str(x) + " " + str(y) + ")"
+        newPoint = ogr.CreateGeometryFromWkt(WKTinput)
+        newPoint.Transform(transform)
+        outPoint = newPoint.ExportToWkt()
+        outPoint = outPoint.split(' ')
+        outputPolygon.append([float(outPoint[1][1:]),float(outPoint[2][:-1])])
     return np.array(outputPolygon)
 
 def seriesToNPoints(series,N):
@@ -114,6 +128,9 @@ def fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,imageSize):
     boundary1=np.genfromtxt(boundary1file,delimiter=',')
     boundary2file = glaciersFolder + '/' + glacier + '/Fjord Boundaries/' + glacier + ' Boundary 2 V2.csv'
     boundary2 = np.genfromtxt(boundary2file, delimiter=',')
+
+    print 'read %s'%(glaciersFolder+'/'+glacier+'/Fjord Boundaries/'+glacier+' Boundary 1 V2.csv')
+    print 'read %s'%(glaciersFolder + '/' + glacier + '/Fjord Boundaries/' + glacier + ' Boundary 2 V2.csv')
 
     boundary1=seriesToNPoints(boundary1,1000)
     boundary2 = seriesToNPoints(boundary2, 1000)
@@ -155,20 +172,20 @@ def plotImageWithSolutionAndEndpoints(image,solution,startPoint,endPoint,boundar
     plt.gca().set_aspect('equal')
     plt.show()
 
-def leastCostSolution(imgArr,boundarySide1indices,boundarySide2indices,step):
+def leastCostSolution(imgArr,boundarySide1indices,boundarySide2indices):
     weight=1e22
     indices=[]
     for b1 in range(len(boundarySide1indices)):
-        if b1 % step==0:
-            startPoint = np.array(boundarySide1indices[b1],dtype=int)
-            if b1 % step == 0:
+        if b1%50==0:
+            startPoint = boundarySide1indices[b1]
+            if b1 % 50 == 0:
                 print('    '+str(b1+1)+' of '+str(len(boundarySide1indices))+' indices tested')
             for b2 in range(len(boundarySide2indices)):
-                if b2 % step ==0:
-                    endPoint = np.array(boundarySide2indices[b2],dtype=int)
-                    testIndices, testWeight = route_through_array(imgArr, (startPoint[1], startPoint[0]),\
-                        (endPoint[1], endPoint[0]), geometric=True,\
-                        fully_connected=True)
+                if b2%50==0:
+                    endPoint = boundarySide2indices[b2]
+                    testIndices, testWeight = route_through_array(imgArr, (startPoint[1], startPoint[0]),
+                                                          (endPoint[1], endPoint[0]), geometric=True,
+                                                          fully_connected=True)
                     tmpIndices = np.array(testIndices)
                     testIndices=np.hstack([np.reshape(tmpIndices[:,1],(np.shape(tmpIndices)[0],1)),np.reshape(tmpIndices[:,0],(np.shape(tmpIndices)[0],1))])
 
@@ -259,27 +276,6 @@ def solutionToShapefile(glacier,labels,frontIndices,shapefileOutputFolder, corne
         prj.close()
 
 
-def solutionToCSV(glacier, labels, frontIndices, csvOutputFolder, cornersList, projectionList,imageSizeList):
-    for ll in range(len(labels)):
-        frontSolution = imagePixelsToGeoCoords(frontIndices[ll], cornersList[ll], projectionList[ll], imageSizeList[ll])
-        outputFile = glacier + ' ' + labels[ll] + ' Profile.csv'
-        output = []
-        for c in range(len(frontSolution)):
-            output.append([frontSolution[c, 0], frontSolution[c, 1]])
-        output=np.array(output)
-        np.savetxt(csvOutputFolder+'/'+outputFile,output,delimiter=',')
-
-def pixelSolutionToCSV(glacier, labels, frontIndices, pixelOutputFolder, cornersList, projectionList, imageSizeList):
-    for ll in range(len(labels)):
-        frontSolution = frontIndices[ll]
-        outputFile = glacier + ' ' + labels[ll] + ' Pixels.csv'
-        output = []
-        for c in range(len(frontSolution)):
-            output.append([frontSolution[c, 0], frontSolution[c, 1]])
-        output = np.array(output)
-        np.savetxt(pixelOutputFolder + '/' + outputFile, output, delimiter=',')
-
-
 
 
 #############################################################################################
@@ -287,19 +283,16 @@ def pixelSolutionToCSV(glacier, labels, frontIndices, pixelOutputFolder, corners
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['glaciers=','method=','step=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:',long_options)
+    long_options = ['glaciers=','method=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:',long_options)
 
     glacier= 'Helheim'
     method = 'CNN'
-    step = 50
     for opt, arg in optlist:
         if opt in ('-G','--glaciers'):
             glacier = arg
         elif opt in ('-M','--method'):
             method = arg
-        elif opt in ('-S','--step'):
-            step = np.int(arg)
 
     #-- directory setup
     #- current directory
@@ -308,22 +301,11 @@ def main():
 
     glaciersFolder=headDirectory+'/Glaciers'
 
-    labelFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
+    labelFolder=headDirectory+'/Results/Helheim Results/'+method
 
-    postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+step
-    csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+step
-    pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+step
-    shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+step
+    postProcessedOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Post-Processed'
+    shapefileOutputFolder=headDirectory+'/Results/Helheim Results/'+method+' Shapefile'
     
-    #-- make output folders
-    if (not os.path.isdir(postProcessedOutputFolder)):
-        os.mkdir(postProcessedOutputFolder)
-    if (not os.path.isdir(csvOutputFolder)):
-        os.mkdir(csvOutputFolder)
-    if (not os.path.isdir(pixelOutputFolder)):
-        os.mkdir(pixelOutputFolder)
-    if (not os.path.isdir(shapefileOutputFolder)):
-        os.mkdir(shapefileOutputFolder)
 
     labelList=generateLabelList(labelFolder)
 
@@ -333,10 +315,10 @@ def main():
     imageSizeList=[]
     for label in labelList:
         print('Working on label '+label)
-        if ('sobel' in method) or ('Sobel' in method):
-            im = Image.open(labelFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
-        else:
+        if method=='CNN':
             im=Image.open(labelFolder+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
+        if method == 'Sobel':
+            im = Image.open(labelFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
 
         corners,projection=obtainSceneCornersProjection(glacier,label,glaciersFolder)
         cornersList.append(corners)
@@ -344,16 +326,16 @@ def main():
         imageSizeList.append(im.size)
 
         boundary1pixels,boundary2pixels=fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,im.size)
-        # plotImageWithBoundaries(im,boundary1pixels,boundary2pixels)
+        #
+        plotImageWithBoundaries(im,boundary1pixels,boundary2pixels)
 
-        solutionIndices = leastCostSolution(im,boundary1pixels,boundary2pixels,step)
+        solutionIndices = leastCostSolution(im,boundary1pixels,boundary2pixels)
         frontIndicesList.append(solutionIndices)
 
         outputSolutionIndicesPng(im,solutionIndices,postProcessedOutputFolder,label)
-        # plotImageWithSolution(im,solutionIndices)
+        #
+        plotImageWithSolution(im,solutionIndices)
 
-    solutionToCSV(glacier, labelList, frontIndicesList, csvOutputFolder, cornersList, projectionList,imageSizeList)
-    pixelSolutionToCSV(glacier, labelList, frontIndicesList, pixelOutputFolder, cornersList, projectionList, imageSizeList)
     solutionToShapefile(glacier, labelList, frontIndicesList, shapefileOutputFolder, cornersList, projectionList, imageSizeList)
 
 if __name__ == '__main__':

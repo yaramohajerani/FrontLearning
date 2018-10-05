@@ -243,8 +243,8 @@ def train_model(parameters):
         ,sample_weight_mode="temporal")
 
     #-- checkpoint file
-    chk_file = os.path.join(glacier_ddir,'unet_model_weights_%ibatches_%ilayers_%iinit%s%s%s%s%s%s%s.h5'\
-        %(n_batch,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+    chk_file = os.path.join(glacier_ddir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.h5'\
+        %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
 
     #-- if file exists, read model from file
     if os.path.isfile(chk_file):
@@ -312,8 +312,8 @@ def train_model(parameters):
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ibatches_%ilayers_%iinit%s%s%s%s%s%s%s'\
-            %(n_batch,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
+        out_subdir = 'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s'\
+            %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

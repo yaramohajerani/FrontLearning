@@ -56,16 +56,20 @@ f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_equa
     '%s_nothreshold.png'%prefix)
 l4_10b = np.array(Image.open(f).convert('L'))/255.
 
-
-f = os.path.join(ddir,'output_10batches_4layers_32init_1.00weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_5layers_32init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
-l4_noweight = np.array(Image.open(f).convert('L'))/255.
+l5 = np.array(Image.open(f).convert('L'))/255.
+
+# f = os.path.join(ddir,'output_10batches_4layers_32init_1.00weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+#     '%s_nothreshold.png'%prefix)
+# l4_noweight = np.array(Image.open(f).convert('L'))/255.
 
 sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_edgeEnhance',\
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 
-cnn_p_file = os.path.join(ddir,'Post Processing Results/CNN HF/CNN HF Post-Processed','%s_Solution.png'%prefix)
+folder = 'output_3batches_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped'
+cnn_p_file = os.path.join(main_dir,'Results/Helheim Results',folder,'%s Post-Processed'%folder,'%s_Solution.png'%prefix)
 cnn_p = np.array(Image.open(cnn_p_file).convert('L'))/255.
 
 sobel_p_file = os.path.join(ddir,'Post Processing Results/Sobel/Sobel Post-Processed','%s_Solution.png'%prefix)
@@ -113,8 +117,12 @@ ax[2,0].imshow(l4_10b, cmap=plt.cm.gray)
 ax[2,0].set_title(r"$\bf{f)}$" + " batch-size 10", fontsize=12, color='navy')
 
 #-- 4 layer no weight
-ax[2,1].imshow(l4_noweight, cmap=plt.cm.gray)
-ax[2,1].set_title(r"$\bf{g)}$" + " No Weights", fontsize=12, color='navy')
+#ax[2,1].imshow(l4_noweight, cmap=plt.cm.gray)
+#ax[2,1].set_title(r"$\bf{g)}$" + " No Weights", fontsize=12, color='navy')
+
+#-- 5 layer 
+ax[2,1].imshow(l5, cmap=plt.cm.gray)
+ax[2,1].set_title(r"$\bf{g)}$" + " 37 Layers", fontsize=12, color='navy')
 
 #-- sobel
 ax[2,2].imshow(sobel_out, cmap=plt.cm.gray)

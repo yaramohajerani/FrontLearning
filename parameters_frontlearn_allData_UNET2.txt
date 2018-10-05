@@ -1,5 +1,5 @@
 GLACIER_NAME	all_data2
-EPOCHS	60
+EPOCHS	30
 BATCHES	3
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
 N_INIT	32	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
@@ -10,7 +10,7 @@ ADD_WEIGHTS     Y
 IMBALANCE_RATIO 0
 NORMALIZE       N
 CROP    Y
-AUGMENT N
+AUGMENT Y
 AUG_CONFIG  2
 LINEAR  N
 FILTER  sobel
