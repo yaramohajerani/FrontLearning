@@ -47,9 +47,9 @@ f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_augme
 l4_augx2 = np.array(Image.open(f).convert('L'))/255.
 
 
-#f = os.path.join(ddir,'output_3batches_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
-#    '%s_nothreshold.png'%prefix)
-#l4_augx3 = np.array(Image.open(f).convert('L'))/255.
+f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+    '%s_nothreshold.png'%prefix)
+l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
 
 f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
@@ -105,7 +105,7 @@ ax[1,1].imshow(l4_augx2, cmap=plt.cm.gray)
 ax[1,1].set_title(r"$\bf{e)}$" + " Augmented:\nMirrored", fontsize=12, color='navy')
 
 #-- 4 layer aug x3
-#ax[1,2].imshow(l4_augx3, cmap=plt.cm.gray)
+ax[1,2].imshow(l4_augx3, cmap=plt.cm.gray)
 ax[1,2].set_title(r"$\bf{f)}$" + " Augmented:\nMirrored & Inverted", fontsize=12, color='navy')
 
 #-- 4 layer 10 batches
