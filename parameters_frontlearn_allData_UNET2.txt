@@ -1,6 +1,6 @@
 GLACIER_NAME	all_data2
-EPOCHS	30
-BATCHES	3
+EPOCHS	60
+BATCHES	10
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
 N_INIT	32	#-- starting number of convolution filters in the first layer (i.e. output dimension after first layer)
 DROPOUT 0.2      #-- dropout fraction. 0 for no dropout
@@ -11,7 +11,7 @@ IMBALANCE_RATIO 0
 NORMALIZE       N
 CROP    Y
 AUGMENT Y
-AUG_CONFIG  2
+AUG_CONFIG  3
 LINEAR  N
 FILTER  sobel
 imb_str 82.22   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing

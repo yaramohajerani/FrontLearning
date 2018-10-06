@@ -37,17 +37,17 @@ front = np.array(Image.open(front_file).convert('L'))/255.
 
 
 
-f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_noAug = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx2 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_3batches_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
@@ -56,7 +56,7 @@ f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_equa
     '%s_nothreshold.png'%prefix)
 l4_10b = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_3batches_5layers_32init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_60epochs_5layers_32init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l5 = np.array(Image.open(f).convert('L'))/255.
 
@@ -68,8 +68,8 @@ sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_ed
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 
-folder = 'output_3batches_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped'
-cnn_p_file = os.path.join(main_dir,'Results/Helheim Results',folder,'%s Post-Processed'%folder,'%s_Solution.png'%prefix)
+folder = 'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped'
+cnn_p_file = os.path.join(main_dir,'Results/Helheim Results',folder,'%s Post-Processed 50'%folder,'%s_Solution.png'%prefix)
 cnn_p = np.array(Image.open(cnn_p_file).convert('L'))/255.
 
 sobel_p_file = os.path.join(ddir,'Post Processing Results/Sobel/Sobel Post-Processed','%s_Solution.png'%prefix)

@@ -21,6 +21,7 @@ import scipy.misc
 def post_process(parameters):
     glacier = parameters['GLACIER_NAME']
     n_batch = int(parameters['BATCHES'])
+    n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
     n_init = int(parameters['N_INIT'])
     suffix = parameters['SUFFIX']
@@ -70,8 +71,8 @@ def post_process(parameters):
     
     for d in ['test']:#,'train']:
         #-- read in output data of the neural network
-        subdir = os.path.join(ddir[d],'output_%ibatches_%ilayers_%iinit%s%s%s%s%s%s%s'\
-                %(n_batch,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+        subdir = os.path.join(ddir[d],'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s'\
+                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
 
         print subdir
 

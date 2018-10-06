@@ -310,10 +310,10 @@ def main():
 
     labelFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
 
-    postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+step
-    csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+step
-    pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+step
-    shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+step
+    postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+str(step)
+    csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+str(step)
+    pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
+    shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+str(step)
     
     #-- make output folders
     if (not os.path.isdir(postProcessedOutputFolder)):
