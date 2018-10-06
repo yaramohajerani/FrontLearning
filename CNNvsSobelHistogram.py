@@ -1,10 +1,12 @@
 #code to make a histogram of the errors between the true, cnn, and sobel fronts
 
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from PIL import Image
+import getopt
 
 
 #############################################################################################
@@ -41,7 +43,7 @@ def main():
     pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
     shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+str(step)
 
-    outputFolder=headDirectory+'/Results/'+glacier+' Results/Histograms/'+method
+    outputFolder=headDirectory+'/Results/'+glacier+' Results/Histograms/'+method+'_'+str(step)
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
@@ -280,7 +282,7 @@ def main():
     plt.gca().set_xlim([0, np.max([x1, x2])])
 
     outputFolder = headDirectory+'/Results/Helheim Results/'
-    plt.savefig(outputFolder + '/Figure_4_'+'_'.join(method.split())+'.pdf',bbox_inches='tight')
+    plt.savefig(outputFolder + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'.pdf',bbox_inches='tight')
 
 if __name__ == '__main__':
     main()
