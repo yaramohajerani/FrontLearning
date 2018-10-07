@@ -36,7 +36,7 @@ front = np.array(Image.open(front_file).convert('L'))/255.
 
 
 
-f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_noAug = np.array(Image.open(f).convert('L'))/255.
 
@@ -46,20 +46,20 @@ f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2
 l4_augx2 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_5layers_40init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_60epochs_5layers_32init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_3batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_3b = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_30batches_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_30batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_30b = np.array(Image.open(f).convert('L'))/255.
 
@@ -99,7 +99,7 @@ ax[1,2].set_title(r"$\bf{e)}$" + " Augmented:\nMirrored & Inverted", fontsize=12
 
 #-- 5 layer 
 ax[1,3].imshow(l5_noAug, cmap=plt.cm.gray)
-ax[1,3].set_title(r"$\bf{f)}$" + " 37 Layers\n640 Channels", fontsize=12, color='navy')
+ax[1,3].set_title(r"$\bf{f)}$" + " 37 Layers", fontsize=12, color='navy')
 
 #-- 4 layer 30 batches
 ax[2,0].imshow(l4_30b, cmap=plt.cm.gray)
