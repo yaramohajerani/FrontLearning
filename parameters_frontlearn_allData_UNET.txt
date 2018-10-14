@@ -10,8 +10,8 @@ ADD_WEIGHTS     Y
 IMBALANCE_RATIO 0
 NORMALIZE       N
 CROP    Y
-AUGMENT N
-AUG_CONFIG  3
+AUGMENT Y
+AUG_CONFIG  2
 LINEAR  N
 FILTER  sobel
 imb_str 86.60   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
