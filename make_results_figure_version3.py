@@ -59,12 +59,14 @@ front = np.array(Image.open(front_file).convert('L'))/255.
 
 #-- combine the 3 output images into one image
 out_image = np.ones(front.shape)
-ind1 = np.where(cnn_p==0.)
-out_image[ind1] = 0.0
+ind3 = np.where(front==0.)
+out_image[ind3] = 0.0
 ind2 = np.where(sobel_p==0.)
 out_image[ind2] = 0.3
-ind3 = np.where(front==0.)
-out_image[ind3] = 0.6
+ind1 = np.where(cnn_p==0.)
+out_image[ind1] = 0.6
+
+
 
 ax[0].imshow(in_img, cmap=plt.cm.gray)
 ax[0].axes.get_xaxis().set_ticks([])
@@ -89,9 +91,9 @@ ax[2].set_title(r"$\bf{c)}$" + " Sobel Output", fontsize=12)
 ax[3].set_title(r"$\bf{d)}$" + " Processed Comparison", fontsize=12)
 
 #-- make fake legend
-ax[3].plot([],[],color=rgb_to_name((255, 0, 0)),label='NN')
+ax[3].plot([],[],color=rgb_to_name((0, 0, 255)),label='NN')
 ax[3].plot([],[],color=rgb_to_name((0, 255, 0)),label='Sobel')
-ax[3].plot([],[],color=rgb_to_name((0, 0, 255)),label='True Front')
+ax[3].plot([],[],color=rgb_to_name((255, 0, 0)),label='True Front')
 ax[3].legend(loc='upper right', bbox_to_anchor=(1.05, 0.5),fontsize=12)
 
 #fig.subplots_adjust(hspace=0)
