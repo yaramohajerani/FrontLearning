@@ -69,6 +69,10 @@ f = os.path.join(ddir,'output_10batches_4layers_32init_1.00weight_w0.2drop_equal
     '%s_nothreshold.png'%prefix)
 l4_noweight = np.array(Image.open(f).convert('L'))/255.
 
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_64init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+    '%s_nothreshold.png'%prefix)
+l4_64 = np.array(Image.open(f).convert('L'))/255.
+
 sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_edgeEnhance',\
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
@@ -81,40 +85,67 @@ sobel_p = np.array(Image.open(sobel_p_file).convert('L'))/255.
 
 #-- input image
 #ax[0,0].imshow(in_img, cmap=plt.cm.gray)
-#ax[0,0].set_title(r"$\bf{a)}$" + " Pre-processsed Input", fontsize=12, color='navy')
+#ax[0,0].set_title(r"$\bf{a)}$" + " Pre-processsed Input", fontsize=10, color='navy')
 
 #-- true front
 #ax[0,1].imshow(front, cmap=plt.cm.gray)
-#ax[0,1].set_title(r"$\bf{b)}$" + " True Front", fontsize=12, color='navy')
+#ax[0,1].set_title(r"$\bf{b)}$" + " True Front", fontsize=10, color='navy')
 
 #-- 4 layer standard
 ax[0,0].imshow(l4_noAug, cmap=plt.cm.gray)
-ax[0,0].set_title(r"$\bf{a)}$" + " No Augmentation", fontsize=12, color='navy')
+ax[0,0].set_title(r"$\bf{a)}$" + " No Augmentation", fontsize=10, color='navy')
+ax[0,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(361.26),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[0,0].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 4 layer aug x2
 ax[0,1].imshow(l4_augx2, cmap=plt.cm.gray)
-ax[0,1].set_title(r"$\bf{b)}$" + " Augmented:\nMirrored", fontsize=12, color='navy')
+ax[0,1].set_title(r"$\bf{b)}$" + " Augmented:\nMirrored", fontsize=10, color='navy')
+ax[0,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(225.72),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[0,1].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 4 layer aug x3
 ax[0,2].imshow(l4_augx3, cmap=plt.cm.gray)
-ax[0,2].set_title(r"$\bf{c)}$" + " Augmented:\nMirrored & Inverted", fontsize=12, color='navy')
+ax[0,2].set_title(r"$\bf{c)}$" + " Augmented:\nMirrored & Inverted", fontsize=10, color='navy')
+ax[0,2].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(283.15),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[0,2].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 5 layer 
 ax[1,0].imshow(l5_noAug, cmap=plt.cm.gray)
-ax[1,0].set_title(r"$\bf{d)}$" + " 37 Layers", fontsize=12, color='navy')
+ax[1,0].set_title(r"$\bf{d)}$" + " 37 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(296.41),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,0].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
+
+#-- 4 layer - 64 start 
+ax[1,1].imshow(l4_64, cmap=plt.cm.gray)
+ax[1,1].set_title(r"$\bf{e)}$" + " 29 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(358.39),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 4 layer 30 batches
 #ax[2,0].imshow(l4_30b, cmap=plt.cm.gray)
-#ax[2,0].set_title(r"$\bf{g)}$" + " batch-size 30", fontsize=12, color='navy')
+#ax[2,0].set_title(r"$\bf{g)}$" + " batch-size 30", fontsize=10, color='navy')
 
 #-- 4 layer 3 batches
-ax[1,1].imshow(l4_3b, cmap=plt.cm.gray)
-ax[1,1].set_title(r"$\bf{e)}$" + " batch-size 3", fontsize=12, color='navy')
+ax[1,2].imshow(l4_3b, cmap=plt.cm.gray)
+ax[1,2].set_title(r"$\bf{f)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,2].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(389.89),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 4 layer no weight
-ax[1,2].imshow(l4_noweight, cmap=plt.cm.gray)
-ax[1,2].set_title(r"$\bf{f)}$" + " No Weights", fontsize=12, color='navy')
-
+#ax[1,2].imshow(l4_noweight, cmap=plt.cm.gray)
+#ax[1,2].set_title(r"$\bf{f)}$" + " No Weights", fontsize=10, color='navy')
 
 
 for i in range(2):
@@ -131,7 +162,7 @@ for i in range(2):
         ax[i,j].spines['right'].set_color('0.5')
         ax[i,j].spines['left'].set_color('0.5')
 
-#fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.3)
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 #fig.tight_layout()
 #plt.show()
 plt.savefig(os.path.join(main_dir,'Figure_4.pdf'),format='pdf',dpi=300)
