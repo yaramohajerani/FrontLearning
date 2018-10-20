@@ -14,12 +14,13 @@ import getopt
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['glaciers=','method=','step=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:',long_options)
+    long_options = ['glaciers=','method=','step=','indir=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
 
     glacier= 'Helheim'
     method = 'CNN'
     step = 50
+    indir = ''
     for opt, arg in optlist:
         if opt in ('-G','--glaciers'):
             glacier = arg
@@ -27,6 +28,8 @@ def main():
             method = arg
         elif opt in ('-S','--step'):
             step = np.int(arg)
+        elif opt in ('-I','--indir'):
+            indir = os.path.expanduser(arg)
 
 
     #-- directory setup
@@ -36,19 +39,14 @@ def main():
 
     glaciersFolder=headDirectory+'/Glaciers'
 
-    labelFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
-
-    postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+str(step)
-    csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+str(step)
-    pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
-    shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+str(step)
+    #-- if user input not given, set label folder
+    if indir == '':
+        indir=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
 
     outputFolder=headDirectory+'/Results/'+glacier+' Results/Histograms/'+method+'_'+str(step)
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
-
-    labelFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
 
     cnnPixelFolder = headDirectory+'/Results/' + glacier + ' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
     sobelPixelFolder = headDirectory+'/Results/' + glacier + ' Results/Sobel/Sobel Pixel CSVs '+str(step)
@@ -129,7 +127,7 @@ def main():
                     frontsList.append(line[0])
         return(frontsList)
 
-    labelList=generateLabelList(labelFolder)
+    labelList=generateLabelList(indir)
     frontList=getFrontList(glacier,labelList)
 
     allCNNerrors=[]

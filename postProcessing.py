@@ -1,4 +1,16 @@
-#code to find path of least resistance through an image
+#!/anaconda2/bin/python2.7
+u"""
+sckikit_canny.py
+by Michael Wood (Last Updated by Yara Mohajerani 10/2018)
+
+find path of least resistance through an image
+
+Update History
+        10/2018 - Yara: Change input folder to be consistent with
+                        other scripts
+        09/2018 - Yara: Clean up and add user input
+        09/2018 - Michael: written
+"""
 
 import numpy as np
 from PIL import Image
@@ -17,9 +29,9 @@ from pyproj import Proj,transform
 #############################################################################################
 
 #This function to make a list of the labels
-def generateLabelList(labelFolder):
+def generateLabelList(indir):
     labelList=[]
-    for fil in os.listdir(labelFolder):
+    for fil in os.listdir(indir):
         if fil[-6:] == 'B8.png' or fil[-6:] == 'B2.png':
             labelList.append(fil[:-4])
     return(labelList)
@@ -287,12 +299,13 @@ def pixelSolutionToCSV(glacier, labels, frontIndices, pixelOutputFolder, corners
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['glaciers=','method=','step=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:',long_options)
+    long_options = ['glaciers=','method=','step=','indir=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
 
     glacier= 'Helheim'
     method = 'CNN'
     step = 50
+    indir = ''
     for opt, arg in optlist:
         if opt in ('-G','--glaciers'):
             glacier = arg
@@ -300,6 +313,8 @@ def main():
             method = arg
         elif opt in ('-S','--step'):
             step = np.int(arg)
+        elif opt in ('-I','--indir'):
+            indir = os.path.expanduser(arg)
 
     #-- directory setup
     #- current directory
@@ -308,7 +323,9 @@ def main():
 
     glaciersFolder=headDirectory+'/Glaciers'
 
-    labelFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
+    #-- if user input not given, set label folder
+    if indir == '':
+        indir=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
 
     postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+str(step)
     csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+str(step)
@@ -325,7 +342,7 @@ def main():
     if (not os.path.isdir(shapefileOutputFolder)):
         os.mkdir(shapefileOutputFolder)
 
-    labelList=generateLabelList(labelFolder)
+    labelList=generateLabelList(indir)
 
     frontIndicesList=[]
     cornersList=[]
@@ -334,9 +351,9 @@ def main():
     for label in labelList:
         print('Working on label '+label)
         if ('sobel' in method) or ('Sobel' in method):
-            im = Image.open(labelFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
+            im = Image.open(indir + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
         else:
-            im=Image.open(labelFolder+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
+            im=Image.open(indir+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
 
         corners,projection=obtainSceneCornersProjection(glacier,label,glaciersFolder)
         cornersList.append(corners)
