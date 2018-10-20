@@ -1,19 +1,22 @@
 #!/anaconda2/bin/python2.7
 u"""
 frontlearn_train.py
-by Yara Mohajerani (Last Update 09/2018)
+by Yara Mohajerani (Last Update 10/2018)
 
 Train U-Net model in frontlearn_unet.py
 
 Update History
         10/2018 Add training plots (histroy of loss and acc)
                 Add option for # of alterations in augmentation
+                Add option for width of label
         09/2018 Combine with original script and clean up
                 Add option for weighing white and black pixels separately
                 Add options for importing different models from the model file
                 Add batch label back in for comparison
         05/2018 Forked from frontlearn_train.py
 """
+import matplotlib
+matplotlib.use('Agg') #-- noninteractive backend for GP
 import os
 import numpy as np
 import keras
@@ -27,15 +30,13 @@ from tensorflow.python.client import device_lib
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from sklearn.utils import class_weight
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg') #-- noninteractive backend for GP
 
 #-- Print backend information
 print(device_lib.list_local_devices())
 print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str):
+def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_width):
     #-- make subdirectories for input images
     trn_subdir = os.path.join(trn_dir,'images%s%s'%(suffix,crop_str))
     tst_subdir = os.path.join(tst_dir,'images%s%s'%(suffix,crop_str))
@@ -72,7 +73,7 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str):
         #-- same file name but different directories for images and labels
         #-- read image and label first
         img = Image.open(os.path.join(trn_subdir,f)).convert('L')
-        lbl = Image.open(os.path.join(trn_dir,'labels%s'%crop_str,f.replace('Subset','Front'))).convert('L')
+        lbl = Image.open(os.path.join(trn_dir,'labels%s%s'%(lbl_width,crop_str),f.replace('Subset','Front'))).convert('L')
         #-- do permutations with the following:
         #-- 1) flip image Horizontal (spatial)
         #-- 2) flip color (invert)
@@ -186,6 +187,13 @@ def train_model(parameters):
     else:
         PLOT = False
 
+    #-- width of labels (pixels)
+    #-- don't label 3-pix width to be consistent with old results
+    if parameters['LABEL_WIDTH'] == '3':
+        lbl_width = ''
+    else:
+        lbl_width = '_%ipx'%int(parameters['LABEL_WIDTH'])
+
     if (normalize) and (drop!=0):
         sys.exit('Both batch normalization and dropout are selecte. Choose one.')
 
@@ -199,7 +207,7 @@ def train_model(parameters):
     tst_dir = os.path.join(data_dir,'test')
 
     #-- load images
-    data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str)
+    data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_width)
 
     n,height,width,channels=data['trn_img'].shape
     print('width=%i'%width)
@@ -243,8 +251,8 @@ def train_model(parameters):
         ,sample_weight_mode="temporal")
 
     #-- checkpoint file
-    chk_file = os.path.join(glacier_ddir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.h5'\
-        %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+    chk_file = os.path.join(glacier_ddir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.h5'\
+        %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width))
 
     #-- if file exists, read model from file
     if os.path.isfile(chk_file):
@@ -268,9 +276,9 @@ def train_model(parameters):
 
         #-- save history to file
         outfile = open(os.path.join(glacier_ddir,\
-                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.txt'\
+                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.txt'\
                 %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-                aug_str,suffix,crop_str)),'w')
+                aug_str,suffix,crop_str,lbl_width)),'w')
         outfile.write('Epoch loss\tval_loss\tacc\tval_acc\n')
         for i in range(len(history.history['loss'])):
             outfile.write('%i\t%f\t%f\t%f\t%f\n'%(i,history.history['loss'][i],history.history['val_loss'][i],\
@@ -290,7 +298,7 @@ def train_model(parameters):
                 plt.savefig(os.path.join(glacier_ddir,\
                     'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
                     %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-                    aug_str,suffix,crop_str)),format='pdf')
+                    aug_str,suffix,crop_str,lbl_width)),format='pdf')
                 plt.close(fig)
 
     print('Model is trained. Running on test data...')
@@ -312,8 +320,8 @@ def train_model(parameters):
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
         print out_imgs.shape
         #-- make output directory
-        out_subdir = 'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s'\
-            %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str)
+        out_subdir = 'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
+            %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width)
         if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
             os.mkdir(os.path.join(outdir[t],out_subdir))
         #-- save the test image

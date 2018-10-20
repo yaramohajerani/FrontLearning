@@ -1,11 +1,12 @@
 #!/anaconda2/bin/python2.7
 u"""
 crop_input.py
-by Yara Mohajerani (09/2018)
+by Yara Mohajerani (Last update 10/2018)
 
 Crop input data.
 
 Update History
+        10/2018 Add option for label width
         09/2018 Written
 """
 import os
@@ -17,7 +18,7 @@ from PIL import Image,ImageOps
 from keras.preprocessing import image
 
 #-- read in images
-def load_data(suffix,ddir,hcrop,wcrop):
+def load_data(suffix,ddir,hcrop,wcrop,lbl_width):
     files = {}
     images = {}
     labels = {}
@@ -40,7 +41,7 @@ def load_data(suffix,ddir,hcrop,wcrop):
         for i,f in enumerate(files[d]):
             #-- same file name but different directories for images and labels
             img = np.array(Image.open(os.path.join(subdir,f)).convert('L'))/255.
-            lbl = np.array(Image.open(os.path.join(ddir[d],'labels',f.replace('Subset','Front'))).convert('L'))/255.
+            lbl = np.array(Image.open(os.path.join(ddir[d],'labels%s'%lbl_width,f.replace('Subset','Front'))).convert('L'))/255.
 
             images[d][i][:,:] = img[hcrop:h-hcrop,wcrop:w-wcrop]
             labels[d][i][:,:] = lbl[hcrop:h-hcrop,wcrop:w-wcrop]
@@ -50,9 +51,14 @@ def load_data(suffix,ddir,hcrop,wcrop):
 
     return [images,labels,files]
 
-def train_model(parameters):
+def crop_input(parameters):
     glacier = parameters['GLACIER_NAME']
     suffix = parameters['SUFFIX']
+    if parameters['LABEL_WIDTH'] == '3':
+        lbl_width = ''
+    else:
+        lbl_width = '_%ipx'%int(parameters['LABEL_WIDTH'])
+    
 
     #-- directory setup
     #- current directory
@@ -65,12 +71,12 @@ def train_model(parameters):
     ddir['test'] = os.path.join(data_dir,'test')
 
     #-- load images
-    images,labels,files = load_data(suffix,ddir,30,25)
+    images,labels,files = load_data(suffix,ddir,30,25,lbl_width)
 
     #-- make output directory
     for d in ['train','test']:
         out_subdir_img = os.path.join(ddir[d],'images%s_cropped'%suffix)
-        out_subdir_lbl = os.path.join(ddir[d],'labels_cropped')
+        out_subdir_lbl = os.path.join(ddir[d],'labels%s_cropped'%lbl_width)
         if (not os.path.isdir(out_subdir_img)):
             os.mkdir(out_subdir_img)
         if (not os.path.isdir(out_subdir_lbl)):
@@ -107,7 +113,7 @@ def main():
             fid.close()
 
             #-- pass parameters to training function
-            train_model(parameters)
+            crop_input(parameters)
 
 if __name__ == '__main__':
     main()
