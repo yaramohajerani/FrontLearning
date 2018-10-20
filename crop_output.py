@@ -8,6 +8,7 @@ remove faint points
 
 History
     10/2018 Update augment string
+            Add option for label width
     09/2018 Written
 """
 import os
@@ -58,6 +59,11 @@ def post_process(parameters):
     drop_str = ''
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
+    
+    if parameters['LABEL_WIDTH'] == '3':
+        lbl_width = ''
+    else:
+        lbl_width = '_%ipx'%int(parameters['LABEL_WIDTH'])
 
     #-- directory setup
     #- current directory
@@ -71,8 +77,8 @@ def post_process(parameters):
     
     for d in ['test']:#,'train']:
         #-- read in output data of the neural network
-        subdir = os.path.join(ddir[d],'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s'\
-                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str))
+        subdir = os.path.join(ddir[d],'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
+                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width))
 
         print subdir
 

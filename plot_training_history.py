@@ -62,6 +62,11 @@ def plot_history(parameters):
     else:
         PLOT = False
 
+    if parameters['LABEL_WIDTH'] == '3':
+        lbl_width = ''
+    else:
+        lbl_width = '_%ipx'%int(parameters['LABEL_WIDTH'])
+
     if (normalize) and (drop!=0):
         sys.exit('Both batch normalization and dropout are selecte. Choose one.')
 
@@ -77,9 +82,9 @@ def plot_history(parameters):
 
     #-- input file
     infile = os.path.join(glacier_ddir,\
-        'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.txt'\
+        'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.txt'\
         %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-        aug_str,suffix,crop_str))
+        aug_str,suffix,crop_str,lbl_width))
 
     history = pd.read_table(infile,delim_whitespace=True)
     epochs = history['Epoch'] + 1 #- start from 1 instead of 0
@@ -98,9 +103,9 @@ def plot_history(parameters):
         plt.xlabel('Epochs')
         plt.legend(['Training', 'Validation'], loc='upper left')
         plt.savefig(os.path.join(glacier_ddir,\
-            'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
+            'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.pdf'\
             %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-            aug_str,suffix,crop_str)),format='pdf')
+            aug_str,suffix,crop_str,lbl_width)),format='pdf')
         plt.close(fig)
 
 #-- main function to get parameters and pass them along to fitting function
