@@ -37,23 +37,25 @@ def main():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     headDirectory = os.path.join(current_dir,'..','FrontLearning_data')
 
-    glaciersFolder=headDirectory+'/Glaciers'
+    glacier_dir = os.path.join(headDirectory,'Glaciers',glacier)
+    results_dir = os.path.join(headDirectory,'Results', glacier + ' Results')
 
     #-- if user input not given, set label folder
     if indir == '':
-        indir=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
-
-    outputFolder=headDirectory+'/Results/'+glacier+' Results/Histograms/'+method+'_'+str(step)
+        indir=os.path.join(results_dir,method,method)
+        
+    outputFolder= os.path.join(results_dir,'Histograms/'+method+'_'+str(step))
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
 
-    cnnPixelFolder = headDirectory+'/Results/' + glacier + ' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
-    sobelPixelFolder = headDirectory+'/Results/' + glacier + ' Results/Sobel/Sobel Pixel CSVs '+str(step)
+    
+    cnnPixelFolder = os.path.join(results_dir,method,method+' Pixel CSVs '+str(step))
+    sobelPixelFolder = os.path.join(results_dir,'Sobel/Sobel Pixel CSVs '+str(step))
 
-    trueFrontFolder = headDirectory+'/Glaciers/' + glacier + '/Front Locations/3413'
-    cnnFrontFolder = headDirectory+'/Results/' + glacier + ' Results/'+method+'/'+method+' Geo CSVs '+str(step)
-    sobelFrontFolder = headDirectory+'/Results/' + glacier + ' Results/Sobel/Sobel Geo CSVs '+str(step)
+    trueFrontFolder = os.path.join(glacier_dir,'Front Locations/3413')
+    cnnFrontFolder = os.path.join(results_dir,method,method+' Geo CSVs '+str(step))
+    sobelFrontFolder = os.path.join(results_dir,'Sobel/Sobel Geo CSVs '+str(step))
 
 
     def seriesToNPoints(series,N):
@@ -142,13 +144,13 @@ def main():
         ############################################################################
         # This section to get the front images
         trueImageFolder=headDirectory+'/Glaciers/'+glacier+'/Small Images'
-        trueImage = Image.open(trueImageFolder+'/'+label+'_Subset.png').transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+        trueImage = Image.open(os.path.join(trueImageFolder,label+'_Subset.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
 
-        cnnImageFolder = headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
-        cnnImage = Image.open(cnnImageFolder + '/' + label + '_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+        cnnImageFolder = indir
+        cnnImage = Image.open(os.path.join(cnnImageFolder,label + '_nothreshold.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
 
-        sobelImageFolder = headDirectory+'/Results/'+glacier+' Results/Sobel/Sobel'
-        sobelImage = Image.open(sobelImageFolder + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+        sobelImageFolder = os.path.join(results_dir,'Sobel/Sobel')
+        sobelImage = Image.open(os.path.join(sobelImageFolder,label + '.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
 
         ############################################################################
         # This section to get the front pixels

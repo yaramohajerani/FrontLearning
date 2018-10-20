@@ -321,16 +321,20 @@ def main():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     headDirectory = os.path.join(current_dir,'..','FrontLearning_data')
 
-    glaciersFolder=headDirectory+'/Glaciers'
+    glaciersFolder=os.path.join(headDirectory,'Glaciers')
+
+    outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
+    if (not os.path.isdir(outdir)):
+        os.mkdir(outdir)
 
     #-- if user input not given, set label folder
     if indir == '':
-        indir=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method
+        indir= os.path.join(outdir,method)
 
-    postProcessedOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Post-Processed '+str(step)
-    csvOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Geo CSVs '+str(step)
-    pixelOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Pixel CSVs '+str(step)
-    shapefileOutputFolder=headDirectory+'/Results/'+glacier+' Results/'+method+'/'+method+' Shapefile '+str(step)
+    postProcessedOutputFolder = os.path.join(outdir,method+' Post-Processed '+str(step))
+    csvOutputFolder = os.path.join(outdir,method+' Geo CSVs '+str(step))
+    pixelOutputFolder = os.path.join(outdir,method+' Pixel CSVs '+str(step))
+    shapefileOutputFolder = os.path.join(outdir,method+' Shapefile '+str(step))
     
     #-- make output folders
     if (not os.path.isdir(postProcessedOutputFolder)):
