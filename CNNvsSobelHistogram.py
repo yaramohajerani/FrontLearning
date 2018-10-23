@@ -18,7 +18,7 @@ def main():
     optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
 
     glacier= 'Helheim'
-    method = 'CNN'
+    method = ''
     step = 50
     indir = ''
     for opt, arg in optlist:
@@ -41,9 +41,17 @@ def main():
     results_dir = os.path.join(headDirectory,'Results', glacier + ' Results')
 
     #-- if user input not given, set label folder
+    #-- else if input directory is given, then set the method based on that
     if indir == '':
-        indir=os.path.join(results_dir,method,method)
-        
+        indir = os.path.join(results_dir,method,method)
+    else:
+        method = os.path.basename(indir)
+        if method=='':
+            sys.exit("Please do not put '/' at the end of indir.")
+
+    print('input directory ONLY for NN output:%s'%indir)
+    print('METHOD:%s'%method)
+
     outputFolder= os.path.join(results_dir,'Histograms/'+method+'_'+str(step))
     #-- make output folders
     if (not os.path.isdir(outputFolder)):

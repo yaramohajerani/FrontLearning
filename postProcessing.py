@@ -303,7 +303,7 @@ def main():
     optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
 
     glacier= 'Helheim'
-    method = 'CNN'
+    method = ''
     step = 50
     indir = ''
     for opt, arg in optlist:
@@ -323,13 +323,24 @@ def main():
 
     glaciersFolder=os.path.join(headDirectory,'Glaciers')
 
-    outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
-    if (not os.path.isdir(outdir)):
-        os.mkdir(outdir)
+    
 
     #-- if user input not given, set label folder
     if indir == '':
+        #-- first create ourdifr directory
+        outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
+        #-- make input directory
         indir= os.path.join(outdir,method)
+    #-- if input directory is given, then set the method based on that
+    else:
+        method = os.path.basename(indir)
+        #-- then make output directory based on method
+        outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
+
+    if (not os.path.isdir(outdir)):
+        os.mkdir(outdir)
+
+    print('input directory:%s'%indir)
 
     postProcessedOutputFolder = os.path.join(outdir,method+' Post-Processed '+str(step))
     csvOutputFolder = os.path.join(outdir,method+' Geo CSVs '+str(step))
@@ -347,6 +358,8 @@ def main():
         os.mkdir(shapefileOutputFolder)
 
     labelList=generateLabelList(indir)
+
+    print(labelList)
 
     frontIndicesList=[]
     cornersList=[]
