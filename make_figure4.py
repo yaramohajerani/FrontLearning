@@ -77,11 +77,6 @@ sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_ed
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 
-cnn_p_file = os.path.join(ddir,'Post Processing Results/CNN HF/CNN HF Post-Processed','%s_Solution.png'%prefix)
-cnn_p = np.array(Image.open(cnn_p_file).convert('L'))/255.
-
-sobel_p_file = os.path.join(ddir,'Post Processing Results/Sobel/Sobel Post-Processed','%s_Solution.png'%prefix)
-sobel_p = np.array(Image.open(sobel_p_file).convert('L'))/255.
 
 #-- input image
 #ax[0,0].imshow(in_img, cmap=plt.cm.gray)

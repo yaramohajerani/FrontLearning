@@ -1,7 +1,7 @@
 u"""
-make_results_figure
+make_figure3.py
 
-Plot Figure 3 of paper. Temporary script for figure.
+Plot Figure 3 of paper.
 """
 
 import os
@@ -48,14 +48,18 @@ sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_ed
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 
-cnn_p_file = os.path.join(ddir,'Post Processing Results/CNN HF/CNN HF Post-Processed','%s_Solution.png'%prefix)
+post_procss_dir = 'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped'
+cnn_p_file = os.path.join(main_dir,'Results','Helheim Results',post_procss_dir,post_procss_dir+' Post-Processed 50',\
+    '%s_Solution.png'%prefix)
 cnn_p = np.array(Image.open(cnn_p_file).convert('L'))/255.
 
-sobel_p_file = os.path.join(ddir,'Post Processing Results/Sobel/Sobel Post-Processed','%s_Solution.png'%prefix)
+sobel_p_file = os.path.join(main_dir,'Results','Helheim Results','Sobel','Sobel Post-Processed 50','%s_Solution.png'%prefix)
 sobel_p = np.array(Image.open(sobel_p_file).convert('L'))/255.
 
 front_file = os.path.join(ddir,'labels','%s_Front.png'%prefix)
 front = np.array(Image.open(front_file).convert('L'))/255.
+
+
 
 #-- combine the 3 output images into one image
 out_image = np.ones(front.shape)
