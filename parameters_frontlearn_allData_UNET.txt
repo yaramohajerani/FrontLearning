@@ -7,7 +7,7 @@ DROPOUT 0.2      #-- dropout fraction. 0 for no dropout
 SUFFIX  _equalize_autocontrast_smooth_edgeEnhance	#_autocontrast_equalize_edgeEnhance      #input/out suffix
 RETRAIN	N
 ADD_WEIGHTS     Y
-IMBALANCE_RATIO 82.22
+IMBALANCE_RATIO 0
 NORMALIZE       N
 CROP    Y
 AUGMENT Y
@@ -17,4 +17,4 @@ FILTER  sobel
 imb_str 82.22   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
 THRESHOLD       0.     #-- threshold for post-processing
 PLOT    N
-LABEL_WIDTH 1
+LABEL_WIDTH 3

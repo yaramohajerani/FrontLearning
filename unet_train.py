@@ -9,6 +9,8 @@ Update History
         10/2018 Add training plots (histroy of loss and acc)
                 Add option for # of alterations in augmentation
                 Add option for width of label
+                Add option for outputting NN results for training even with
+                    augmentation
         09/2018 Combine with original script and clean up
                 Add option for weighing white and black pixels separately
                 Add options for importing different models from the model file
@@ -68,8 +70,9 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_wi
         w_pad = np.copy(w)
     train_img = np.ones((n,h_pad,w_pad))
     train_lbl = np.ones((n,h_pad,w_pad))
+    train_img_orig = np.ones((len(trn_files),h_pad,w_pad))
     count = 0
-    for f in trn_files:
+    for file_count,f in enumerate(trn_files):
         #-- same file name but different directories for images and labels
         #-- read image and label first
         img = Image.open(os.path.join(trn_subdir,f)).convert('L')
@@ -82,6 +85,8 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_wi
         train_img[count][:im_shape[0],:im_shape[1]] = np.array(img)/255.
         train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
         count += 1
+        #-- also just save the original for outputting training predictions
+        train_img_orig[file_count][:im_shape[0],:im_shape[1]] = np.array(img)/255.
         if augment:
             if aug_config == 3:
                 #-- INVERT COLORS
@@ -105,7 +110,8 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_wi
         test_img[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(tst_list[i]).convert('L'))/255.
 
     return {'trn_img':train_img.reshape(n,h_pad,w_pad,1),'trn_lbl':train_lbl.reshape(n,h_pad*w_pad,1),\
-        'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'trn_names':trn_files,'tst_names':tst_files}
+        'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'trn_names':trn_files,'tst_names':tst_files,\
+        'trn_orig':train_img_orig.reshape(len(trn_files),h_pad,w_pad,1)}
 
 #-- find ratio of white to black pixels (no boundary to boundary)
 def set_ratio(lbls):
@@ -305,7 +311,7 @@ def train_model(parameters):
 
     #-- make dictionaries for looping through train and test sets
     in_img = {}
-    in_img['train'] = data['trn_img']
+    in_img['train'] = data['trn_orig']
     in_img['test'] = data['tst_img']
     outdir = {}
     outdir['train'] = trn_dir
@@ -314,7 +320,7 @@ def train_model(parameters):
     names['train'] = data['trn_names']
     names['test'] = data['tst_names']
     #-- Now test the model on both the test data and the train data
-    for t in ['test']:
+    for t in ['test','train']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])

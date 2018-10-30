@@ -9,6 +9,7 @@ remove faint points
 History
     10/2018 Update augment string
             Add option for label width
+            Apply to both 'test' and 'train' output
     09/2018 Written
 """
 import os
@@ -75,7 +76,7 @@ def post_process(parameters):
     ddir['train'] = os.path.join(data_dir,'train')
     ddir['test'] = os.path.join(data_dir,'test')
     
-    for d in ['test']:#,'train']:
+    for d in ['test','train']:
         #-- read in output data of the neural network
         subdir = os.path.join(ddir[d],'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
                 %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width))
