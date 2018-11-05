@@ -1,24 +1,13 @@
 #!/anaconda2/bin/python2.7
 u"""
-unet_train.py
-by Yara Mohajerani (Last Update 10/2018)
+unet_test.py
+by Yara Mohajerani (Last Update 11/2018)
 
-Train U-Net model in frontlearn_unet.py
+Test U-Net model in frontlearn_unet.py
 
 Update History
-    10/2018 Add training plots (histroy of loss and acc)
-        Add option for # of alterations in augmentation
-        Add option for width of label
-        Add option for outputting NN results for training even with
-            augmentation
-    09/2018 Combine with original script and clean up
-        Add option for weighing white and black pixels separately
-        Add options for importing different models from the model file
-        Add batch label back in for comparison
-    05/2018 Forked from frontlearn_train.py
+    11/2018 Fork from unet_train
 """
-import matplotlib
-matplotlib.use('Agg') #-- noninteractive backend for GP
 import os
 import numpy as np
 import keras
@@ -31,31 +20,24 @@ from keras import backend as K
 from tensorflow.python.client import device_lib
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 from sklearn.utils import class_weight
-import matplotlib.pyplot as plt
 
 #-- Print backend information
 print(device_lib.list_local_devices())
 print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_width):
+def load_data(suffix,tst_dir,n_layers,crop_str,lbl_width):
     #-- make subdirectories for input images
-    trn_subdir = os.path.join(trn_dir,'images%s%s'%(suffix,crop_str))
     tst_subdir = os.path.join(tst_dir,'images%s%s'%(suffix,crop_str))
     #-- get a list of the input files
-    trn_list = glob(os.path.join(trn_subdir,'*.png'))
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
     #-- get just the file names
-    trn_files = [os.path.basename(i) for i in trn_list]
     tst_files = [os.path.basename(i) for i in tst_list]
 
     #-- read training data
-    n = len(trn_files)
-    if augment:
-        #-- need to triple for the extra two augmentations
-        n *= aug_config
+    n = len(tst_files)
     #-- get dimensions, force to 1 b/w channel
-    im_shape = np.array(Image.open(trn_list[0]).convert('L')).shape
+    im_shape = np.array(Image.open(tst_list[0]).convert('L')).shape
     h,w = im_shape
     # pad height and width until it's at least divisible by the right number for the given
     # network depth
@@ -68,81 +50,14 @@ def load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_wi
         w_pad = w+n_div-(w%n_div)
     else:
         w_pad = np.copy(w)
-    train_img = np.ones((n,h_pad,w_pad))
-    train_lbl = np.ones((n,h_pad,w_pad))
-    train_img_orig = np.ones((len(trn_files),h_pad,w_pad))
-    count = 0
-    for file_count,f in enumerate(trn_files):
-        #-- same file name but different directories for images and labels
-        #-- read image and label first
-        img = Image.open(os.path.join(trn_subdir,f)).convert('L')
-        lbl = Image.open(os.path.join(trn_dir,'labels%s%s'%(lbl_width,crop_str),f.replace('Subset','Front'))).convert('L')
-        #-- do permutations with the following:
-        #-- 1) flip image Horizontal (spatial)
-        #-- 2) flip color (invert)
-        #-- 3) ?
-        #-- ORIGINAL
-        train_img[count][:im_shape[0],:im_shape[1]] = np.array(img)/255.
-        train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
-        count += 1
-        #-- also just save the original for outputting training predictions
-        train_img_orig[file_count][:im_shape[0],:im_shape[1]] = np.array(img)/255.
-        if augment:
-            if aug_config == 3:
-                #-- INVERT COLORS
-                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.invert(img))/255.
-                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(lbl)/255.
-                count += 1
-                #-- MIRROR HORIZONTALLY
-                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
-                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
-                count += 1
-            elif aug_config == 2:
-                #-- MIRROR HORIZONTALLY
-                train_img[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(img))/255.
-                train_lbl[count][:im_shape[0],:im_shape[1]] = np.array(ImageOps.mirror(lbl))/255.
-		count += 1
-
-    #-- also get the test data
+  
+    #-- get the test data
     n_test = len(tst_files)
     test_img = np.ones((n_test,h_pad,w_pad))
     for i in range(n_test):
         test_img[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(tst_list[i]).convert('L'))/255.
 
-    return {'trn_img':train_img.reshape(n,h_pad,w_pad,1),'trn_lbl':train_lbl.reshape(n,h_pad*w_pad,1),\
-        'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'trn_names':trn_files,'tst_names':tst_files,\
-        'trn_orig':train_img_orig.reshape(len(trn_files),h_pad,w_pad,1)}
-
-#-- find ratio of white to black pixels (no boundary to boundary)
-def set_ratio(lbls):
-    #-- count the proportion of white pixels to black pixels
-    white_tot = 0
-    black_tot = 0
-    tot_size = lbls.shape[1]
-    print 'total size =  ', lbls.shape[1]
-    for i in range(len(lbls)):
-        white_count = np.count_nonzero(lbls[i])
-        white_tot += white_count
-        black_tot += tot_size - white_count
-    
-    return np.float(white_tot)/np.float(black_tot)
-
-#-- set weight matrix for samples
-def set_weights(lbls,ratio):
-    #-- get rid of last dimensin
-    lbls = lbls.reshape(lbls.shape[0],\
-        lbls.shape[1])#,lbls.shape[2])
-    #-- initialize weights
-    w = np.ones((lbls.shape))
-    #-- loop through images
-    for i in range(lbls.shape[0]):
-        #-- flatten out image and get indices of boundaries
-        ind = np.nonzero(lbls[i] == 0.)
-        w[i][ind] *= ratio
-
-    print 'weight: ', ratio
-    print 'weight shape: ', w.shape
-    return w
+    return {'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'tst_names':tst_files}
 
 #-- train model and make predictions
 def train_model(parameters):
@@ -156,11 +71,9 @@ def train_model(parameters):
     imb_w = float(parameters['IMBALANCE_RATIO'])
     #-- set up configurations based on parameters
     if parameters['AUGMENT'] in ['Y','y']:
-        augment = True
         aug_config = np.int(parameters['AUG_CONFIG'])
         aug_str = '_augment-x%i'%aug_config
     else:
-        augment = False
         aug_config = 0
         aug_str = ''
     
@@ -187,12 +100,6 @@ def train_model(parameters):
     if drop>0:
         drop_str = '_w%.1fdrop'%drop
 
-    #-- plotting
-    if parameters['PLOT'] in ['y','Y']:
-        PLOT = True
-    else:
-        PLOT = False
-
     #-- width of labels (pixels)
     #-- don't label 3-pix width to be consistent with old results
     if parameters['LABEL_WIDTH'] == '3':
@@ -213,20 +120,15 @@ def train_model(parameters):
     tst_dir = os.path.join(data_dir,'test')
 
     #-- load images
-    data = load_data(suffix,trn_dir,tst_dir,n_layers,augment,aug_config,crop_str,lbl_width)
+    data = load_data(suffix,tst_dir,n_layers,crop_str,lbl_width)
 
-    n,height,width,channels=data['trn_img'].shape
+    n,height,width,channels=data['tst_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
 
     #-- set up sample weight to deal with imbalance
     if parameters['ADD_WEIGHTS'] in ['Y','y']:
-        if imb_w == 0:
-            ratio = set_ratio(data['trn_lbl'])
-        else:
-            ratio = imb_w
-        sample_weights = set_weights(data['trn_lbl'], ratio)
-        imb_str = '_%.2fweight'%ratio
+        imb_str = '_%.2fweight'%imb_w
     else:
         imb_str = ''
 
@@ -265,49 +167,8 @@ def train_model(parameters):
         print('Check point exists; loading model from file.')
         # load weights
         model.load_weights(chk_file)
-        
-    #-- if not train model
-    if (parameters['RETRAIN'] in ['y','Y']) or (not os.path.isfile(chk_file)):
-        print('Training model...')
-        #-- create checkpoint
-        model_checkpoint = keras.callbacks.ModelCheckpoint(chk_file, monitor='loss',\
-            verbose=1, save_best_only=True)
-        lr_callback = ReduceLROnPlateau(monitor='acc', factor=0.5, patience=5,
-            verbose=1, mode='auto', min_delta=0.0001, cooldown=0, min_lr=0)
-        #es_callback = EarlyStopping(monitor='val_loss',min_delta=0.0001, patience=5,
-        #    verbose=1, mode='auto')
-        #-- now fit the model
-        history = model.fit(data['trn_img'], data['trn_lbl'], batch_size=n_batch, epochs=n_epochs, verbose=1,\
-            validation_split=0.1, shuffle=True, sample_weight=sample_weights, callbacks=[lr_callback,model_checkpoint])
 
-        #-- save history to file
-        outfile = open(os.path.join(glacier_ddir,\
-                'training_history_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.txt'\
-                %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-                aug_str,suffix,crop_str,lbl_width)),'w')
-        outfile.write('Epoch loss\tval_loss\tacc\tval_acc\n')
-        for i in range(len(history.history['loss'])):
-            outfile.write('%i\t%f\t%f\t%f\t%f\n'%(i,history.history['loss'][i],history.history['val_loss'][i],\
-                history.history['acc'][i],history.history['val_acc'][i]))
-        outfile.close()
-
-        #-- Make plots for training history
-        if PLOT:
-            for item,name in zip(['acc','loss'],['Accuracy','Loss']):
-                fig = plt.figure(1,figsize=(8,6))
-                plt.plot(history.history[item])
-                plt.plot(history.history['val_%s'%item])
-                plt.title('Model %s'%name)
-                plt.ylabel(name)
-                plt.xlabel('Epochs')
-                plt.legend(['Training', 'Validation'], loc='upper left')
-                plt.savefig(os.path.join(glacier_ddir,\
-                    'training_history_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s.pdf'\
-                    %(item,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,\
-                    aug_str,suffix,crop_str,lbl_width)),format='pdf')
-                plt.close(fig)
-
-    print('Model is trained. Running on test data...')
+    print('Running on test data...')
 
     #-- make dictionaries for looping through train and test sets
     in_img = {}
@@ -320,7 +181,7 @@ def train_model(parameters):
     names['train'] = data['trn_names']
     names['test'] = data['tst_names']
     #-- Now test the model on both the test data and the train data
-    for t in ['test','train']:
+    for t in ['test']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
         print out_imgs.shape
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
