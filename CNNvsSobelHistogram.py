@@ -1,4 +1,18 @@
-#code to make a histogram of the errors between the true, cnn, and sobel fronts
+#!/anaconda2/bin/python2.7
+u"""
+CNNvsSobelHistogram.py
+by Michael Wood (Last Updated by Yara Mohajerani 10/2018)
+
+find path of least resistance through an image
+
+Update History
+    11/2018 - Yara: Don't separate train or test inputs based on glacier. Input subdir
+                and get glacier name from spreadsheet
+    10/2018 - Yara: Change input folder to be consistent with
+                other scripts
+    09/2018 - Yara: Clean up and add user input
+    09/2018 - Michael: written
+"""
 
 import os
 import sys
@@ -14,16 +28,16 @@ import getopt
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['glaciers=','method=','step=','indir=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
+    long_options = ['subdir=','method=','step=','indir=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:',long_options)
 
-    glacier= 'Helheim'
+    subdir= 'all_data2_test'
     method = ''
     step = 50
     indir = ''
     for opt, arg in optlist:
-        if opt in ('-G','--glaciers'):
-            glacier = arg
+        if opt in ('-D','--subdir'):
+            subdir = arg
         elif opt in ('-M','--method'):
             method = arg
         elif opt in ('-S','--step'):
@@ -37,8 +51,8 @@ def main():
     current_dir = os.path.dirname(os.path.realpath(__file__))
     headDirectory = os.path.join(current_dir,'..','FrontLearning_data')
 
-    glacier_dir = os.path.join(headDirectory,'Glaciers',glacier)
-    results_dir = os.path.join(headDirectory,'Results', glacier + ' Results')
+    glaciersFolder=os.path.join(headDirectory,'Glaciers')
+    results_dir = os.path.join(headDirectory,'Results', subdir)
 
     #-- if user input not given, set label folder
     #-- else if input directory is given, then set the method based on that
@@ -61,7 +75,6 @@ def main():
     cnnPixelFolder = os.path.join(results_dir,method,method+' Pixel CSVs '+str(step))
     sobelPixelFolder = os.path.join(results_dir,'Sobel/Sobel Pixel CSVs '+str(step))
 
-    trueFrontFolder = os.path.join(glacier_dir,'Front Locations/3413')
     cnnFrontFolder = os.path.join(results_dir,method,method+' Geo CSVs '+str(step))
     sobelFrontFolder = os.path.join(results_dir,'Sobel/Sobel Geo CSVs '+str(step))
 
@@ -122,15 +135,29 @@ def main():
                 labelList.append(fil[:-4])
         return(labelList)
 
-    #code to get the list of fronts and their images
-    def getFrontList(glacier,labelList):
-        metadataFile=headDirectory+'/Glaciers/'+glacier+'/'+glacier+' Image Data.csv'
-        f=open(metadataFile)
+    # get glacier names
+    def getGlacierList(labelList):
+        f=open(os.path.join(glaciersFolder,'Scene_Glacier_Dictionary.csv'),'r')
         lines=f.read()
         f.close()
         lines=lines.split('\n')
+        glacierList = []
+        for sceneID in labelList:
+            for line in lines:
+                line=line.split(',')
+                if line[0]==sceneID:   
+                    glacierList.append(line[1])
+        return(glacierList)
+
+    #code to get the list of fronts and their images
+    def getFrontList(glacierList,labelList):
         frontsList = []
-        for label in labelList:
+        for ind,label in enumerate(labelList):
+            glacier = glacierList[ind]
+            f=open(os.path.join(glaciersFolder, glacier, '%s Image Data.csv'%glacier),'r')
+            lines=f.read()
+            f.close()
+            lines=lines.split('\n')
             for line in lines:
                 line=line.split(',')
                 if line[1][:-4] == label:
@@ -138,7 +165,8 @@ def main():
         return(frontsList)
 
     labelList=generateLabelList(indir)
-    frontList=getFrontList(glacier,labelList)
+    glacierList=getGlacierList(labelList)
+    frontList=getFrontList(glacierList,labelList)
 
     allCNNerrors=[]
     allSobelerrors=[]
@@ -146,6 +174,7 @@ def main():
     N=1
     N=len(labelList)
     for ll in range(N):
+        glacier = glacierList[ll]
         label=labelList[ll]
         trueFrontFile=frontList[ll]
 
@@ -177,6 +206,7 @@ def main():
         # This section to get the front data
 
         #get the true front
+        trueFrontFolder = os.path.join(glaciersFolder,glacier,'Front Locations/3413')
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
         trueFront=seriesToNPoints(trueFront,100)
 
@@ -265,6 +295,7 @@ def main():
         plt.gca().set_xlim([0, np.max([x1, x2])])
 
         plt.savefig(outputFolder + '/' + label + '.png',bbox_inches='tight')
+        plt.close(fig)
 
     fig=plt.figure(figsize=(10,4))
 
@@ -289,8 +320,8 @@ def main():
     plt.gca().set_ylim([0, np.max([y1, y2])])
     plt.gca().set_xlim([0, np.max([x1, x2])])
 
-    outputFolder = headDirectory+'/Results/Helheim Results/'
-    plt.savefig(outputFolder + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'.pdf',bbox_inches='tight')
+    plt.savefig(results_dir + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'.pdf',bbox_inches='tight')
+    plt.close()
 
 if __name__ == '__main__':
     main()

@@ -1,15 +1,17 @@
 #!/anaconda2/bin/python2.7
 u"""
-sckikit_canny.py
+postProcessing.py
 by Michael Wood (Last Updated by Yara Mohajerani 10/2018)
 
 find path of least resistance through an image
 
 Update History
-        10/2018 - Yara: Change input folder to be consistent with
-                        other scripts
-        09/2018 - Yara: Clean up and add user input
-        09/2018 - Michael: written
+    11/2018 - Yara: Don't separate train or test inputs based on glacier. Input subdir
+                and get glacier name from spreadsheet
+    10/2018 - Yara: Change input folder to be consistent with
+                other scripts
+    09/2018 - Yara: Clean up and add user input
+    09/2018 - Michael: written
 """
 
 import numpy as np
@@ -41,8 +43,24 @@ def generateLabelList(indir):
 #############################################################################################
 # These functions are to create a list of indices used to find the line label
 
-def obtainSceneCornersProjection(glacier,sceneID,glaciersFolder):
-    f=open(glaciersFolder+'/'+glacier+'/'+glacier+' Image Data.csv')
+# get glacier names
+def getGlacierList(labelList,glaciersFolder):
+    f=open(os.path.join(glaciersFolder,'Scene_Glacier_Dictionary.csv'),'r')
+    lines=f.read()
+    f.close()
+    lines=lines.split('\n')
+    glacierList = []
+    for sceneID in labelList:
+        for line in lines:
+            line=line.split(',')
+            if line[0]==sceneID:   
+                glacierList.append(line[1])
+    return(glacierList)
+
+
+
+def obtainSceneCornersProjection(sceneID,glaciersFolder,glacier):
+    f=open(os.path.join(glaciersFolder, glacier, '%s Image Data.csv'%glacier),'r')
     lines=f.read()
     f.close()
     lines=lines.split('\n')
@@ -122,9 +140,9 @@ def seriesToNPoints(series,N):
     return(newSeries)
 
 def fjordBoundaryIndices(glaciersFolder,glacier,corners,projection,imageSize):
-    boundary1file=glaciersFolder+'/'+glacier+'/Fjord Boundaries/'+glacier+' Boundary 1 V2.csv'
+    boundary1file=os.path.join(glaciersFolder,glacier,'Fjord Boundaries',glacier+' Boundary 1 V2.csv')
     boundary1=np.genfromtxt(boundary1file,delimiter=',')
-    boundary2file = glaciersFolder + '/' + glacier + '/Fjord Boundaries/' + glacier + ' Boundary 2 V2.csv'
+    boundary2file = os.path.join(glaciersFolder,glacier,'Fjord Boundaries',glacier + ' Boundary 2 V2.csv')
     boundary2 = np.genfromtxt(boundary2file, delimiter=',')
 
     boundary1=seriesToNPoints(boundary1,1000)
@@ -173,8 +191,8 @@ def leastCostSolution(imgArr,boundarySide1indices,boundarySide2indices,step):
     for b1 in range(len(boundarySide1indices)):
         if b1 % step==0:
             startPoint = np.array(boundarySide1indices[b1],dtype=int)
-            if b1 % step == 0:
-                print('    '+str(b1+1)+' of '+str(len(boundarySide1indices))+' indices tested')
+            #if b1 % step == 0:
+            #    print('    '+str(b1+1)+' of '+str(len(boundarySide1indices))+' indices tested')
             for b2 in range(len(boundarySide2indices)):
                 if b2 % step ==0:
                     endPoint = np.array(boundarySide2indices[b2],dtype=int)
@@ -248,13 +266,14 @@ def getPrj(epsg):
     output = remove_spaces.replace("\n", "")
     return output
 
-def solutionToShapefile(glacier,labels,frontIndices,shapefileOutputFolder, cornersList, projectionList, imageSizeList):
+def solutionToShapefile(glacierList,labels,frontIndices,shapefileOutputFolder, cornersList, projectionList, imageSizeList):
         #output the shapefile
-        outputFile = glacier+' Front Profiles'
+        outputFile = 'Front Profiles'
         w = shapefile.Writer()
         w.field('Glacier', 'C')
         w.field('Scene', 'C')
         for ll in range(len(labels)):
+            glacier=glacierList[ll]
             frontSolution=imagePixelsToGeoCoords(frontIndices[ll],cornersList[ll],projectionList[ll],imageSizeList[ll])
             w.record(glacier,labels[ll])
             output = []
@@ -265,14 +284,15 @@ def solutionToShapefile(glacier,labels,frontIndices,shapefileOutputFolder, corne
 
 
         # create the .prj file
-        prj = open(shapefileOutputFolder + '/' + outputFile + ".prj", "w")
+        prj = open(os.path.join(shapefileOutputFolder , outputFile + ".prj"), "w")
         epsg = getPrj(3413)
         prj.write(epsg)
         prj.close()
 
 
-def solutionToCSV(glacier, labels, frontIndices, csvOutputFolder, cornersList, projectionList,imageSizeList):
+def solutionToCSV(glacierList, labels, frontIndices, csvOutputFolder, cornersList, projectionList,imageSizeList):
     for ll in range(len(labels)):
+        glacier=glacierList[ll]
         frontSolution = imagePixelsToGeoCoords(frontIndices[ll], cornersList[ll], projectionList[ll], imageSizeList[ll])
         outputFile = glacier + ' ' + labels[ll] + ' Profile.csv'
         output = []
@@ -281,8 +301,9 @@ def solutionToCSV(glacier, labels, frontIndices, csvOutputFolder, cornersList, p
         output=np.array(output)
         np.savetxt(csvOutputFolder+'/'+outputFile,output,delimiter=',')
 
-def pixelSolutionToCSV(glacier, labels, frontIndices, pixelOutputFolder, cornersList, projectionList, imageSizeList):
+def pixelSolutionToCSV(glacierList, labels, frontIndices, pixelOutputFolder, cornersList, projectionList, imageSizeList):
     for ll in range(len(labels)):
+        glacier=glacierList[ll]
         frontSolution = frontIndices[ll]
         outputFile = glacier + ' ' + labels[ll] + ' Pixels.csv'
         output = []
@@ -299,16 +320,16 @@ def pixelSolutionToCSV(glacier, labels, frontIndices, pixelOutputFolder, corners
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['glaciers=','method=','step=','indir=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=G:M:S:I:',long_options)
+    long_options = ['subdir=','method=','step=','indir=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:',long_options)
 
-    glacier= 'Helheim'
+    subdir= 'all_data2_test'
     method = ''
     step = 50
     indir = ''
     for opt, arg in optlist:
-        if opt in ('-G','--glaciers'):
-            glacier = arg
+        if opt in ('-D','--subdir'):
+            subdir = arg
         elif opt in ('-M','--method'):
             method = arg
         elif opt in ('-S','--step'):
@@ -328,19 +349,22 @@ def main():
     #-- if user input not given, set label folder
     if indir == '':
         #-- first create ourdifr directory
-        outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
+        outdir = os.path.join(headDirectory,'Results',subdir,method)
         #-- make input directory
         indir= os.path.join(outdir,method)
     #-- if input directory is given, then set the method based on that
     else:
         method = os.path.basename(indir)
+        if method=='':
+            sys.exit("Please do not put '/' at the end of indir.")
         #-- then make output directory based on method
-        outdir = os.path.join(headDirectory,'Results',glacier+' Results',method)
+        outdir = os.path.join(headDirectory,'Results',subdir,method)
 
     if (not os.path.isdir(outdir)):
         os.mkdir(outdir)
 
     print('input directory:%s'%indir)
+    print('method:%s'%method)
 
     postProcessedOutputFolder = os.path.join(outdir,method+' Post-Processed '+str(step))
     csvOutputFolder = os.path.join(outdir,method+' Geo CSVs '+str(step))
@@ -357,22 +381,27 @@ def main():
     if (not os.path.isdir(shapefileOutputFolder)):
         os.mkdir(shapefileOutputFolder)
 
-    labelList=generateLabelList(indir)
 
-    print(labelList)
+    labelList=generateLabelList(indir)
+    glacierList = getGlacierList(labelList,glaciersFolder)
+
+    print(len(labelList))
 
     frontIndicesList=[]
     cornersList=[]
     projectionList=[]
     imageSizeList=[]
-    for label in labelList:
+    for ind,label in enumerate(labelList):
+        glacier = glacierList[ind]
+        print('%i of %i'%(ind+1,len(labelList)))
         print('Working on label '+label)
+        print('Glacier: '+glacier)
         if ('sobel' in method) or ('Sobel' in method):
             im = Image.open(indir + '/' + label + '.png').transpose(Image.FLIP_LEFT_RIGHT)
         else:
             im=Image.open(indir+'/'+label+'_nothreshold.png').transpose(Image.FLIP_LEFT_RIGHT)
 
-        corners,projection=obtainSceneCornersProjection(glacier,label,glaciersFolder)
+        corners,projection=obtainSceneCornersProjection(label,glaciersFolder,glacier)
         cornersList.append(corners)
         projectionList.append(projection)
         imageSizeList.append(im.size)
@@ -386,9 +415,9 @@ def main():
         outputSolutionIndicesPng(im,solutionIndices,postProcessedOutputFolder,label)
         # plotImageWithSolution(im,solutionIndices)
 
-    solutionToCSV(glacier, labelList, frontIndicesList, csvOutputFolder, cornersList, projectionList,imageSizeList)
-    pixelSolutionToCSV(glacier, labelList, frontIndicesList, pixelOutputFolder, cornersList, projectionList, imageSizeList)
-    solutionToShapefile(glacier, labelList, frontIndicesList, shapefileOutputFolder, cornersList, projectionList, imageSizeList)
+    solutionToCSV(glacierList, labelList, frontIndicesList, csvOutputFolder, cornersList, projectionList,imageSizeList)
+    pixelSolutionToCSV(glacierList, labelList, frontIndicesList, pixelOutputFolder, cornersList, projectionList, imageSizeList)
+    solutionToShapefile(glacierList, labelList, frontIndicesList, shapefileOutputFolder, cornersList, projectionList, imageSizeList)
 
 if __name__ == '__main__':
     main()

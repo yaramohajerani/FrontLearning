@@ -68,7 +68,7 @@ def run_filter(parameters):
 
     sigma = 3
     #-- go through each image and adjust the sigma until a contiuous front is obtained
-    for d in ['test']:
+    for d in ['test','train']:
         if filter =='canny':
             #-- make output directory
             out_subdir = 'output_canny%s'%suffix
