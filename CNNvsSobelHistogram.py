@@ -8,6 +8,8 @@ find path of least resistance through an image
 Update History
     11/2018 - Yara: Don't separate train or test inputs based on glacier. Input subdir
                 and get glacier name from spreadsheet
+                Fix distance bug in frontComparisonErrors
+                Add option for number of line segments for RMS
     10/2018 - Yara: Change input folder to be consistent with
                 other scripts
     09/2018 - Yara: Clean up and add user input
@@ -28,12 +30,13 @@ import getopt
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['subdir=','method=','step=','indir=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:',long_options)
+    long_options = ['subdir=','method=','step=','indir=','interval=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:',long_options)
 
     subdir= 'all_data2_test'
     method = ''
     step = 50
+    n_interval = 1000
     indir = ''
     for opt, arg in optlist:
         if opt in ('-D','--subdir'):
@@ -42,6 +45,8 @@ def main():
             method = arg
         elif opt in ('-S','--step'):
             step = np.int(arg)
+        elif opt in ('-V','--interval'):
+            n_interval = np.int(arg)
         elif opt in ('-I','--indir'):
             indir = os.path.expanduser(arg)
 
@@ -66,7 +71,7 @@ def main():
     print('input directory ONLY for NN output:%s'%indir)
     print('METHOD:%s'%method)
 
-    outputFolder= os.path.join(results_dir,'Histograms/'+method+'_'+str(step))
+    outputFolder= os.path.join(results_dir,'Histograms/'+method+'_'+str(step)+'_%isegs'%n_interval)
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
@@ -113,7 +118,7 @@ def main():
     def frontComparisonErrors(front1,front2):
         errors=[]
         for ff in range(len(front1)):
-            dist=((front1[ff,0]-front2[ff,0])**2+(front1[ff,1]-front2[ff,1]))**0.5
+            dist=((front1[ff,0]-front2[ff,0])**2+(front1[ff,1]-front2[ff,1])**2)**0.5
             if not np.isnan(dist):
                 errors.append(dist)
         return(errors)
@@ -195,12 +200,12 @@ def main():
         # get the CNN front
         cnnPixelsFile = glacier + ' ' + label + ' Pixels.csv'
         cnnPixels = np.genfromtxt(cnnPixelFolder + '/' + cnnPixelsFile, delimiter=',')
-        cnnPixels = seriesToNPoints(cnnPixels, 100)
+        cnnPixels = seriesToNPoints(cnnPixels, n_interval)
 
         # get the Sobel front
         sobelPixelsFile = glacier + ' ' + label + ' Pixels.csv'
         sobelPixels = np.genfromtxt(sobelPixelFolder + '/' + sobelPixelsFile, delimiter=',')
-        sobelPixels = seriesToNPoints(sobelPixels, 100)
+        sobelPixels = seriesToNPoints(sobelPixels, n_interval)
 
         ############################################################################
         # This section to get the front data
@@ -208,12 +213,12 @@ def main():
         #get the true front
         trueFrontFolder = os.path.join(glaciersFolder,glacier,'Front Locations/3413')
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
-        trueFront=seriesToNPoints(trueFront,100)
+        trueFront=seriesToNPoints(trueFront,n_interval)
 
         #get the CNN front
         cnnFrontFile=glacier+' '+label+' Profile.csv'
         cnnFront=np.genfromtxt(cnnFrontFolder+'/'+cnnFrontFile,delimiter=',')
-        cnnFront=seriesToNPoints(cnnFront,100)
+        cnnFront=seriesToNPoints(cnnFront,n_interval)
 
         cnnErrors=frontComparisonErrors(trueFront,cnnFront)
         for error in cnnErrors:
@@ -222,7 +227,7 @@ def main():
         #get the Sobel front
         sobelFrontFile=glacier+' '+label+' Profile.csv'
         sobelFront=np.genfromtxt(sobelFrontFolder+'/'+sobelFrontFile,delimiter=',')
-        sobelFront=seriesToNPoints(sobelFront,100)
+        sobelFront=seriesToNPoints(sobelFront,n_interval)
 
         frontXmin=np.min([np.min(trueFront[:,0]),np.min(cnnFront[:,0]),np.min(sobelFront[:,0])])
         frontXmax = np.max([np.max(trueFront[:, 0]), np.max(cnnFront[:, 0]), np.max(sobelFront[:, 0])])
@@ -320,7 +325,7 @@ def main():
     plt.gca().set_ylim([0, np.max([y1, y2])])
     plt.gca().set_xlim([0, np.max([x1, x2])])
 
-    plt.savefig(results_dir + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'.pdf',bbox_inches='tight')
+    plt.savefig(results_dir + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'.pdf',bbox_inches='tight')
     plt.close()
 
 if __name__ == '__main__':

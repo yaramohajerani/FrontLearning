@@ -26,9 +26,9 @@ print(device_lib.list_local_devices())
 print(K.tensorflow_backend._get_available_gpus())
 
 #-- read in images
-def load_data(suffix,tst_dir,n_layers,crop_str,lbl_width):
+def load_data(suffix,tst_dir,n_layers):
     #-- make subdirectories for input images
-    tst_subdir = os.path.join(tst_dir,'images%s%s'%(suffix,crop_str))
+    tst_subdir = os.path.join(tst_dir,'images%s'%(suffix))
     #-- get a list of the input files
     tst_list = glob(os.path.join(tst_subdir,'*.png'))
     #-- get just the file names
@@ -57,18 +57,24 @@ def load_data(suffix,tst_dir,n_layers,crop_str,lbl_width):
     for i in range(n_test):
         test_img[i][:im_shape[0],:im_shape[1]] = np.array(Image.open(tst_list[i]).convert('L'))/255.
 
-    return {'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'tst_names':tst_files}
+    return {'tst_img':test_img.reshape(n_test,h_pad,w_pad,1),'tst_names':tst_files,'orig_shape':im_shape}
 
 #-- train model and make predictions
 def train_model(parameters):
     glacier = parameters['GLACIER_NAME']
+    model_glacier =parameters['MODEL_DIR']
     n_batch = int(parameters['BATCHES'])
     n_epochs = int(parameters['EPOCHS'])
     n_layers = int(parameters['LAYERS_DOWN'])
     n_init = int(parameters['N_INIT'])
     suffix = parameters['SUFFIX']
     drop = float(parameters['DROPOUT'])
-    imb_w = float(parameters['IMBALANCE_RATIO'])
+    imb_str = '_%.2fweight'%(float(parameters['imb_str']))
+    at = float(parameters['THRESHOLD'])
+    if at != 0:
+        threshold_str = '%.2fthreshold'%at
+    else:
+        threshold_str = 'nothreshold'
     #-- set up configurations based on parameters
     if parameters['AUGMENT'] in ['Y','y']:
         aug_config = np.int(parameters['AUG_CONFIG'])
@@ -115,22 +121,17 @@ def train_model(parameters):
     current_dir = os.path.dirname(os.path.realpath(__file__))
     main_dir = os.path.join(current_dir,'..','FrontLearning_data')
     glacier_ddir = os.path.join(main_dir,'%s.dir'%glacier)
+    model_dir = os.path.join(main_dir,'%s.dir'%model_glacier)
     data_dir = os.path.join(glacier_ddir, 'data')
     trn_dir = os.path.join(data_dir,'train')
     tst_dir = os.path.join(data_dir,'test')
 
     #-- load images
-    data = load_data(suffix,tst_dir,n_layers,crop_str,lbl_width)
+    data = load_data(suffix,tst_dir,n_layers)
 
     n,height,width,channels=data['tst_img'].shape
     print('width=%i'%width)
     print('height=%i'%height)
-
-    #-- set up sample weight to deal with imbalance
-    if parameters['ADD_WEIGHTS'] in ['Y','y']:
-        imb_str = '_%.2fweight'%imb_w
-    else:
-        imb_str = ''
 
     #-- import mod
     unet = imp.load_source('unet_model', os.path.join(current_dir,'unet_model.py'))
@@ -159,43 +160,49 @@ def train_model(parameters):
         ,sample_weight_mode="temporal")
 
     #-- checkpoint file
-    chk_file = os.path.join(glacier_ddir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.h5'\
+    chk_file = os.path.join(model_dir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.h5'\
         %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width))
-
+    
     #-- if file exists, read model from file
     if os.path.isfile(chk_file):
         print('Check point exists; loading model from file.')
         # load weights
         model.load_weights(chk_file)
 
+    print('model file:%s'%chk_file)
     print('Running on test data...')
 
-    #-- make dictionaries for looping through train and test sets
-    in_img = {}
-    in_img['train'] = data['trn_orig']
-    in_img['test'] = data['tst_img']
-    outdir = {}
-    outdir['train'] = trn_dir
-    outdir['test'] = tst_dir
-    names = {}
-    names['train'] = data['trn_names']
-    names['test'] = data['tst_names']
-    #-- Now test the model on both the test data and the train data
-    for t in ['test']:
-        out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
-        print out_imgs.shape
-        out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
-        print out_imgs.shape
-        #-- make output directory
-        out_subdir = 'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
-            %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width)
-        if (not os.path.isdir(os.path.join(outdir[t],out_subdir))):
-            os.mkdir(os.path.join(outdir[t],out_subdir))
-        #-- save the test image
-        for i in range(len(out_imgs)):
-            im = image.array_to_img(out_imgs[i])
-            print os.path.join(outdir[t],out_subdir,'%s'%names[t][i].replace('_Subset','')) 
-            im.save(os.path.join(outdir[t],out_subdir,'%s'%names[t][i].replace('_Subset','')))
+   
+    out_imgs = model.predict(data['tst_img'], batch_size=1, verbose=1)
+    print out_imgs.shape
+    out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
+    print out_imgs.shape
+    #-- make output directory
+    out_subdir = 'output_%s_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
+        %(model_glacier,n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width)
+    if (not os.path.isdir(os.path.join(tst_dir,out_subdir))):
+        os.mkdir(os.path.join(tst_dir,out_subdir))
+    #-- save the test image
+    for i in range(len(out_imgs)):
+        if at != 0.:
+            #-- clean up points below the threshold
+            img_flat = out_imgs[i].flatten()
+            ind_black = np.squeeze(np.nonzero(img_flat <= at))
+            ind_white = np.squeeze(np.nonzero(img_flat > at))
+            img_flat[ind_black] = 0.
+            img_flat[ind_white] = 1.
+            img_array = img_flat.reshape(out_imgs[i].shape)
+            #-- convert back to original dimension
+            img_final = img_array[:data['orig_shape'][0],:data['orig_shape'][1]]
+        else:
+            img_final = out_imgs[i][:data['orig_shape'][0],:data['orig_shape'][1]]
+
+        #-- convert to image
+        im = image.array_to_img(img_final)
+        #im = ImageOps.autocontrast(image.array_to_img(out_imgs[i]))
+        out_name = '%s_%s.png'%((data['tst_names'][i].replace('_Subset',''))[:-4],threshold_str)
+        print(os.path.join(tst_dir,out_subdir,out_name)) 
+        im.save(os.path.join(tst_dir,out_subdir,out_name))
 
 #-- main function to get parameters and pass them along to fitting function
 def main():
