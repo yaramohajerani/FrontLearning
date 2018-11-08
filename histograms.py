@@ -300,9 +300,9 @@ def main():
 
     x = {}
     y = {}
-    for i,d,c in zip(range(len(datasets)),datasets,['b','g','r']):
+    for i,d,c,lbl in zip(range(len(datasets)),datasets,['b','g','r'],['e','f','g']):
         plt.subplot(1,len(datasets),i+1)
-        plt.title(r"$\bf{e)}$" + " %s Error Histogram"%d,fontsize=12)
+        plt.title(r"$\bf{%s)}$"%lbl + " %s Error Histogram"%d,fontsize=12)
         bins=range(0,5000,100)
         y[d], x[d], _ =plt.hist(allerrors[d],alpha=0.5,color=c,bins=bins,label=d)
         plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allerrors[d]))+' m',fontsize=12)
