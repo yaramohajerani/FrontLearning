@@ -1,19 +1,13 @@
 #!/anaconda2/bin/python2.7
 u"""
-CNNvsSobelHistogram.py
-by Michael Wood (Last Updated by Yara Mohajerani 11/2018)
+histograms.py
+by Yara Mohajerani (Last Update 11/2018)
+Forked from CNNvsSobelHistogram.py by Michael Wood 
 
-find path of least resistance through an image
+find path of least resistance through an image and quantify errors
 
 Update History
-    11/2018 - Yara: Don't separate train or test inputs based on glacier. Input subdir
-                and get glacier name from spreadsheet
-                Fix distance bug in frontComparisonErrors
-                Add option for number of line segments for RMS
-    10/2018 - Yara: Change input folder to be consistent with
-                other scripts
-    09/2018 - Yara: Clean up and add user input
-    09/2018 - Michael: written
+    11/2018 - Forked from CNNvsSobelHistogram.py
 """
 
 import os
@@ -23,6 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from PIL import Image
 import getopt
+import copy
 
 
 #############################################################################################
@@ -76,13 +71,18 @@ def main():
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
 
+    datasets = ['NN','Sobel','Manual']
     
-    cnnPixelFolder = os.path.join(results_dir,method,method+' Pixel CSVs '+str(step))
-    sobelPixelFolder = os.path.join(results_dir,'Sobel/Sobel Pixel CSVs '+str(step))
+    pixelFolder = {}
+    frontFolder = {}
 
-    cnnFrontFolder = os.path.join(results_dir,method,method+' Geo CSVs '+str(step))
-    sobelFrontFolder = os.path.join(results_dir,'Sobel/Sobel Geo CSVs '+str(step))
+    pixelFolder['NN'] = os.path.join(results_dir,method,method+' Pixel CSVs '+str(step))
+    pixelFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel Pixel CSVs '+str(step))
+    pixelFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Pixel CSVs '+str(step))
 
+    frontFolder['NN'] = os.path.join(results_dir,method,method+' Geo CSVs '+str(step))
+    frontFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel Geo CSVs '+str(step))
+    frontFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Geo CSVs '+str(step))
 
     def seriesToNPoints(series,N):
         #find the total length of the series
@@ -173,8 +173,10 @@ def main():
     glacierList=getGlacierList(labelList)
     frontList=getFrontList(glacierList,labelList)
 
-    allCNNerrors=[]
-    allSobelerrors=[]
+    allerrors = {}
+    allerrors['NN']=[]
+    allerrors['Sobel']=[]
+    allerrors['Manual']=[]
 
     N=1
     N=len(labelList)
@@ -188,24 +190,24 @@ def main():
         trueImageFolder=headDirectory+'/Glaciers/'+glacier+'/Small Images'
         trueImage = Image.open(os.path.join(trueImageFolder,label+'_Subset.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
 
-        cnnImageFolder = indir
-        cnnImage = Image.open(os.path.join(cnnImageFolder,label + '_nothreshold.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+        frontImageFolder = {}
+        frontImageFolder['NN'] = indir
+        frontImageFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel')
+        frontImageFolder['Manual'] = os.path.join(os.path.dirname(indir),'output_handrawn')
 
-        sobelImageFolder = os.path.join(results_dir,'Sobel/Sobel')
-        sobelImage = Image.open(os.path.join(sobelImageFolder,label + '.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+        frontImage = {}
+        pixels = {}
+        for d,tl in zip(datasets,['_nothreshold','','_nothreshold']):
+            frontImage[d] = Image.open(os.path.join(frontImageFolder[d],label \
+                    + '%s.png'%tl)).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
+            ############################################################################
+            # This section to get the front pixels
 
-        ############################################################################
-        # This section to get the front pixels
+            # get the front
+            pixelsFile = glacier + ' ' + label + ' Pixels.csv'
+            pixels[d] = np.genfromtxt(os.path.join(pixelFolder[d],pixelsFile), delimiter=',')
+            pixels[d] = seriesToNPoints(pixels[d], n_interval)
 
-        # get the CNN front
-        cnnPixelsFile = glacier + ' ' + label + ' Pixels.csv'
-        cnnPixels = np.genfromtxt(cnnPixelFolder + '/' + cnnPixelsFile, delimiter=',')
-        cnnPixels = seriesToNPoints(cnnPixels, n_interval)
-
-        # get the Sobel front
-        sobelPixelsFile = glacier + ' ' + label + ' Pixels.csv'
-        sobelPixels = np.genfromtxt(sobelPixelFolder + '/' + sobelPixelsFile, delimiter=',')
-        sobelPixels = seriesToNPoints(sobelPixels, n_interval)
 
         ############################################################################
         # This section to get the front data
@@ -215,32 +217,29 @@ def main():
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
         trueFront=seriesToNPoints(trueFront,n_interval)
 
-        #get the CNN front
-        cnnFrontFile=glacier+' '+label+' Profile.csv'
-        cnnFront=np.genfromtxt(cnnFrontFolder+'/'+cnnFrontFile,delimiter=',')
-        cnnFront=seriesToNPoints(cnnFront,n_interval)
+        front = {}
+        errors = {}
+        for d in datasets:
+            #get the front
+            frontFile=glacier+' '+label+' Profile.csv'
+            front[d]=np.genfromtxt(os.path.join(frontFolder[d],frontFile),delimiter=',')
+            front[d]=seriesToNPoints(front[d],n_interval)
 
-        cnnErrors=frontComparisonErrors(trueFront,cnnFront)
-        for error in cnnErrors:
-            allCNNerrors.append(error)
+            errors[d]=frontComparisonErrors(trueFront,front[d])
+            for error in errors[d]:
+                allerrors[d].append(error)
 
-        #get the Sobel front
-        sobelFrontFile=glacier+' '+label+' Profile.csv'
-        sobelFront=np.genfromtxt(sobelFrontFolder+'/'+sobelFrontFile,delimiter=',')
-        sobelFront=seriesToNPoints(sobelFront,n_interval)
 
-        frontXmin=np.min([np.min(trueFront[:,0]),np.min(cnnFront[:,0]),np.min(sobelFront[:,0])])
-        frontXmax = np.max([np.max(trueFront[:, 0]), np.max(cnnFront[:, 0]), np.max(sobelFront[:, 0])])
-        frontYmin = np.min([np.min(trueFront[:, 1]), np.min(cnnFront[:, 1]), np.min(sobelFront[:, 1])])
-        frontYmax = np.max([np.max(trueFront[:, 1]), np.max(cnnFront[:, 1]), np.max(sobelFront[:, 1])])
+        frontXmin = np.min(np.concatenate(([np.min(trueFront[:, 0])], [np.min(front[d][:,0]) for d in datasets])))
+        frontXmax = np.max(np.concatenate(([np.max(trueFront[:, 0])], [np.max(front[d][:, 0]) for d in datasets])))
+        frontYmin = np.min(np.concatenate(([np.min(trueFront[:, 1])], [np.min(front[d][:, 1]) for d in datasets])))
+        frontYmax = np.max(np.concatenate(([np.max(trueFront[:, 1])], [np.max(front[d][:, 1]) for d in datasets])))
 
-        sobelErrors=frontComparisonErrors(trueFront,sobelFront)
-        for error in sobelErrors:
-            allSobelerrors.append(error)
 
         fig=plt.figure(figsize=(10,8))
 
-        plt.subplot(2,3,1)
+        n_panels = len(front)+1
+        plt.subplot(2,n_panels,1)
         plt.imshow(trueImage, cmap='gray')
         plt.gca().set_xlim([0, 200])
         plt.gca().set_ylim([300,0])
@@ -248,84 +247,75 @@ def main():
         plt.gca().axes.get_yaxis().set_ticks([])
         plt.title('Original Image',fontsize=12)
 
-        plt.subplot(2, 3, 2)
-        plt.imshow(cnnImage, cmap='gray')
-        plt.plot(cnnPixels[:, 0], cnnPixels[:, 1], 'y-',linewidth=3)
-        plt.gca().set_xlim([0, 200])
-        plt.gca().set_ylim([300, 0])
-        plt.gca().axes.get_xaxis().set_ticks([])
-        plt.gca().axes.get_yaxis().set_ticks([])
-        plt.title('NN Solution',fontsize=12)
+        p = 2
+        for d in datasets:
+            plt.subplot(2, n_panels, p)
+            plt.imshow(frontImage[d], cmap='gray')
+            plt.plot(pixels[d][:, 0], pixels[d][:, 1], 'y-',linewidth=3)
+            plt.gca().set_xlim([0, 200])
+            plt.gca().set_ylim([300, 0])
+            plt.gca().axes.get_xaxis().set_ticks([])
+            plt.gca().axes.get_yaxis().set_ticks([])
+            plt.title('%s Solution'%d,fontsize=12)
+            p += 1
 
-        plt.subplot(2, 3, 3)
-        plt.imshow(sobelImage, cmap='gray')
-        plt.plot(sobelPixels[:, 0], sobelPixels[:, 1], 'y-',linewidth=3)
-        plt.gca().set_xlim([0, 200])
-        plt.gca().set_ylim([300, 0])
-        plt.gca().axes.get_xaxis().set_ticks([])
-        plt.gca().axes.get_yaxis().set_ticks([])
-        plt.title('Sobel Solution',fontsize=12)
 
-        plt.subplot(2,3,4)
+        plt.subplot(2,n_panels,p)
         plt.title('Geocoded Solutions',fontsize=12)
         plt.ylabel('Northing (km)',fontsize=12)
         plt.xlabel('Easting (km)',fontsize=12)
         plt.plot(trueFront[:,0]/1000,trueFront[:,1]/1000,'k-',label='True')
-        plt.plot(cnnFront[:,0]/1000,cnnFront[:,1]/1000,'b-',label='NN')
-        plt.plot(sobelFront[:,0]/1000,sobelFront[:,1]/1000,'g-',label='Sobel')
+        for d,c in zip(datasets,['b-','g-','r-']):
+            plt.plot(front[d][:,0]/1000,front[d][:,1]/1000,c,label=d)
         plt.gca().set_xlim([frontXmin/1000,frontXmax/1000])
         plt.gca().set_ylim([frontYmin/1000, frontYmax/1000])
         plt.gca().set_xticks([frontXmin/1000,frontXmax/1000])
         plt.gca().set_yticks([frontYmin / 1000, frontYmax / 1000])
         plt.legend(loc=0)
 
-        plt.subplot(2,3,5)
-        plt.title('NN Errors Histogram',fontsize=12)
-        bins=range(0,5000,100)
-        y1, x1, _ =plt.hist(cnnErrors,alpha=0.5,color='blue',bins=bins,label='NN')
-        plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(cnnErrors))+' m',fontsize=12)
+        p += 1
+        p_temp = copy.copy(p)
+        x = {}
+        y = {}
+        for d,c in zip(datasets,['b','g','r']):
+            plt.subplot(2,n_panels,p)
+            plt.title('%s Errors Histogram'%d,fontsize=12)
+            bins=range(0,5000,100)
+            y[d], x[d], _ =plt.hist(errors[d],alpha=0.5,color=c,bins=bins,label='NN')
+            plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(errors[d]))+' m',fontsize=12)
 
-        plt.subplot(2, 3, 6)
-        plt.title('Sobel Error Histogram',fontsize=12)
-        bins = range(0, 5000, 100)
-        y2, x2, _ =plt.hist(sobelErrors, alpha=0.5, color='green', bins=bins, label='Sobel')
-        plt.xlabel('RMS Error = ' + '{0:.2f}'.format(rmsError(sobelErrors)) + ' m',fontsize=12)
+            p += 1
 
-        plt.subplot(2,3,5)
-        plt.gca().set_ylim([0,np.max([y1, y2])])
-        plt.gca().set_xlim([0, np.max([x1, x2])])
+        #-- set histogram bounds
+        for d in datasets:
+            plt.subplot(2,n_panels,p_temp)
+            plt.gca().set_ylim([0,np.max([y[d] for d in datasets])])
+            plt.gca().set_xlim([0, np.max([x[d] for d in datasets])])
+            p_temp += 1
 
-        plt.subplot(2, 3, 6)
-        plt.gca().set_ylim([0, np.max([y1, y2])])
-        plt.gca().set_xlim([0, np.max([x1, x2])])
-
-        plt.savefig(outputFolder + '/' + label + '.png',bbox_inches='tight')
+        plt.savefig(os.path.join(outputFolder, label + '.png'),bbox_inches='tight')
         plt.close(fig)
 
-    fig=plt.figure(figsize=(10,4))
+    fig=plt.figure(figsize=(11,4))
 
-    plt.subplot(1,2,1)
-    plt.title(r"$\bf{e)}$" + " NN Error Histogram",fontsize=12)
-    bins=range(0,5000,100)
-    y1, x1, _ =plt.hist(allCNNerrors,alpha=0.5,color='blue',bins=bins,label='NN')
-    plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allCNNerrors))+' m',fontsize=12)
-    plt.ylabel('Count (100 m bins)',fontsize=12)
+    x = {}
+    y = {}
+    for i,d,c in zip(range(len(datasets)),datasets,['b','g','r']):
+        plt.subplot(1,len(datasets),i+1)
+        plt.title(r"$\bf{e)}$" + " %s Error Histogram"%d,fontsize=12)
+        bins=range(0,5000,100)
+        y[d], x[d], _ =plt.hist(allerrors[d],alpha=0.5,color=c,bins=bins,label=d)
+        plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allerrors[d]))+' m',fontsize=12)
+        if i==0:
+            plt.ylabel('Count (100 m bins)',fontsize=12)
 
-    plt.subplot(1,2,2)
-    plt.title(r"$\bf{f)}$" + " Sobel Error Histogram",fontsize=12)
-    bins = range(0, 5000, 100)
-    y2, x2, _ =plt.hist(allSobelerrors, alpha=0.5, color='green', bins=bins, label='Sobel')
-    plt.xlabel('RMS Error = ' + '{0:.2f}'.format(rmsError(allSobelerrors)) + ' m',fontsize=12)
+    for i in range(len(datasets)):
+        plt.subplot(1,len(datasets),i+1)
+        plt.gca().set_ylim([0,np.max([y[d] for d in datasets])])
+        plt.gca().set_xlim([0,np.max([x[d] for d in datasets])])
 
-    plt.subplot(1,2,1)
-    plt.gca().set_ylim([0,np.max([y1, y2])])
-    plt.gca().set_xlim([0, np.max([x1, x2])])
-
-    plt.subplot(1,2,2)
-    plt.gca().set_ylim([0, np.max([y1, y2])])
-    plt.gca().set_xlim([0, np.max([x1, x2])])
-
-    plt.savefig(results_dir + '/Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'.pdf',bbox_inches='tight')
+    plt.savefig(os.path.join(results_dir,\
+        'Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'.pdf'),bbox_inches='tight')
     plt.close()
 
 if __name__ == '__main__':
