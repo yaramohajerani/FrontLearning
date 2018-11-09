@@ -18,6 +18,7 @@ from matplotlib.ticker import FormatStrFormatter
 from PIL import Image
 import getopt
 import copy
+from shapely.geometry import LineString, shape
 
 
 #############################################################################################
@@ -25,13 +26,14 @@ import copy
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['subdir=','method=','step=','indir=','interval=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:',long_options)
+    long_options = ['subdir=','method=','step=','indir=','interval=','buffer=']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:B:',long_options)
 
     subdir= 'all_data2_test'
     method = ''
     step = 50
     n_interval = 1000
+    buffer_size=500
     indir = ''
     for opt, arg in optlist:
         if opt in ('-D','--subdir'):
@@ -42,9 +44,10 @@ def main():
             step = np.int(arg)
         elif opt in ('-V','--interval'):
             n_interval = np.int(arg)
+        elif opt in ('-B','--buffer'):
+            buffer_size = np.int(arg)
         elif opt in ('-I','--indir'):
             indir = os.path.expanduser(arg)
-
 
     #-- directory setup
     #- current directory
@@ -66,7 +69,7 @@ def main():
     print('input directory ONLY for NN output:%s'%indir)
     print('METHOD:%s'%method)
 
-    outputFolder= os.path.join(results_dir,'Histograms',method+'_'+str(step)+'_%isegs'%n_interval)
+    outputFolder= os.path.join(results_dir,'Histograms',method+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size)
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
@@ -169,6 +172,17 @@ def main():
                     frontsList.append(line[0])
         return(frontsList)
 
+    def fjordBoundaryIndices(glacier):
+        boundary1file=os.path.join(glaciersFolder,glacier,'Fjord Boundaries',glacier+' Boundary 1 V2.csv')
+        boundary1=np.genfromtxt(boundary1file,delimiter=',')
+        boundary2file = os.path.join(glaciersFolder,glacier,'Fjord Boundaries',glacier + ' Boundary 2 V2.csv')
+        boundary2 = np.genfromtxt(boundary2file, delimiter=',')
+
+        boundary1=seriesToNPoints(boundary1,1000)
+        boundary2 = seriesToNPoints(boundary2, 1000)
+
+        return(boundary1,boundary2)
+
     labelList=generateLabelList(indir)
     glacierList=getGlacierList(labelList)
     frontList=getFrontList(glacierList,labelList)
@@ -184,10 +198,10 @@ def main():
         glacier = glacierList[ll]
         label=labelList[ll]
         trueFrontFile=frontList[ll]
-
+        print(label)
         ############################################################################
         # This section to get the front images
-        trueImageFolder=headDirectory+'/Glaciers/'+glacier+'/Small Images'
+        trueImageFolder=os.path.join(headDirectory,'Glaciers',glacier,'Small Images')
         trueImage = Image.open(os.path.join(trueImageFolder,label+'_Subset.png')).transpose(Image.FLIP_LEFT_RIGHT).convert("L")
 
         frontImageFolder = {}
@@ -210,11 +224,31 @@ def main():
 
 
         ############################################################################
+        # Get the fjord boundaries for the current glacier
+        bounds = {}
+        bounds[1], bounds[2] = fjordBoundaryIndices(glacier)
+        buff = {}
+        for i in [1,2]:
+            # Form buffer around boundary
+            lineStringSet=bounds[i]
+            line=LineString(lineStringSet)
+            buff[i] = line.buffer(buffer_size)
+            
+
+
+        ############################################################################
         # This section to get the front data
 
         #get the true front
-        trueFrontFolder = os.path.join(glaciersFolder,glacier,'Front Locations/3413')
+        trueFrontFolder = os.path.join(glaciersFolder,glacier,'Front Locations','3413')
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
+        trueFront=seriesToNPoints(trueFront,n_interval)
+        #-- get rid of poitns too close to the edges
+        l1 = LineString(trueFront)
+        int1 = l1.difference(buff[1])
+        int2 = int1.difference(buff[2])
+        trueFront = np.array(shape(int2).coords)
+        #-- rebreak into n_interval segments
         trueFront=seriesToNPoints(trueFront,n_interval)
 
         front = {}
@@ -223,6 +257,14 @@ def main():
             #get the front
             frontFile=glacier+' '+label+' Profile.csv'
             front[d]=np.genfromtxt(os.path.join(frontFolder[d],frontFile),delimiter=',')
+            front[d]=seriesToNPoints(front[d],n_interval)
+            #-- get rid of points to close to the edges
+            #-- get rid of poitns too close to the edges
+            l1 = LineString(front[d])
+            int1 = l1.difference(buff[1])
+            int2 = int1.difference(buff[2])
+            front[d] = np.array(shape(int2).coords)
+            #-- rebreak into n_interval segments
             front[d]=seriesToNPoints(front[d],n_interval)
 
             errors[d]=frontComparisonErrors(trueFront,front[d])
@@ -315,7 +357,7 @@ def main():
         plt.gca().set_xlim([0,np.max([x[d] for d in datasets])])
 
     plt.savefig(os.path.join(results_dir,\
-        'Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'.pdf'),bbox_inches='tight')
+        'Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size+'.pdf'),bbox_inches='tight')
     plt.close()
 
 if __name__ == '__main__':

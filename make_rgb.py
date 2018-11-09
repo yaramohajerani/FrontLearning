@@ -1,26 +1,21 @@
+#!/anaconda2/bin/python2.7
 u"""
-extrct_handrawn.py
-by Yara Mohajerani (11/2018)
+make_rgb.py
+by Yara Mohajerani (Last update 11/2018)
 
-Extract handrawn fronts on the same resolution as the NN was 
-trained on for comparison.
+Convert images to RGB for manual annotation
 
-History
-    11/2018 Written
+Update History
+        11/2018 Written
 """
-
 import os
 import numpy as np
 import imp
 import sys
-import getopt
 from glob import glob
 from PIL import Image
-import scipy.misc
+import getopt
 
-#############################################################################################
-# All of the functions are run here
-#-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
     long_options = ['indir=']
@@ -31,8 +26,6 @@ def main():
         if opt in ('-I','--indir'):
             indir = os.path.expanduser(arg)
     
-    #-- this is only for consistency so it works with other scripts
-    threshold_str = 'nothreshold'
 
     #-- get a list of the input files
     in_list = sorted([fn for fn in glob(os.path.join(indir,'*png'))
@@ -42,21 +35,22 @@ def main():
     print(filenames)
     h,w = np.array(Image.open(in_list[0]).convert('L')).shape
 
+    outdir = os.path.join(os.path.dirname(indir),'output_handrawn')
+    #-- make output folder
+    if (not os.path.isdir(outdir)):
+        os.mkdir(outdir)
+    else:
+        sys.exit('Files alreay exist. Dont overwrite.')
+        
     #-- read files to fix dimensions are remove points dimmer than the threshold
     for i in range(n_files):
-        img = np.array(Image.open(in_list[i]))
-        reds = img[:,:,0]
-        greens = img[:,:,1]
-        blues = img[:,:,2]
-
-        #-- extract red points
-        ind = np.where((reds==255) & (greens==0) & (blues==0))
-        new_im = np.ones((img.shape[0],img.shape[1]))
-        new_im[ind] = 0
+        img = Image.open(in_list[i])
+        rgbimg = Image.new("RGB", img.size)
+        rgbimg.paste(img)
 
         #-- save final image to file
-        outfile = os.path.join(indir,'%s_%s.png'%((filenames[i].replace('_Subset',''))[:-4],threshold_str))
-        scipy.misc.imsave(outfile, new_im)
+        outfile = os.path.join(outdir,'%s.png'%((filenames[i].replace('_Subset',''))[:-4]))
+        rgbimg.save(outfile, 'PNG')
 
 if __name__ == '__main__':
     main()
