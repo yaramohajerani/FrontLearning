@@ -106,6 +106,9 @@ def post_process(parameters):
         for i in range(n_files):
             img = np.array(Image.open(in_list[i]).convert('L'))/255.
 
+            #-- if the borders are dark, get rid of them
+            #img[0:20,:] = 1.
+            #img[-20:-1,:] = 1.
             if at != 0.:
                 #-- clean up points below the threshold
                 img_flat = img.flatten()
@@ -114,7 +117,8 @@ def post_process(parameters):
                 img_flat[ind_black] = 0.
                 img_flat[ind_white] = 1.
                 img = img_flat.reshape(img.shape)
-
+            
+            
             #-- remove extra cropping that was done for pooling
             img_nopad = np.ones(orig_shape)
             img_nopad =  img[:orig_shape[0],:orig_shape[1]]
@@ -125,7 +129,10 @@ def post_process(parameters):
             img_final = np.ones((h_final,w_final))
 
             img_final[hcrop:h_final-hcrop,wcrop:w_final-wcrop] = img_nopad[:,:]
-
+            #-- get rid of extra line that sometime shows at the border of original image
+            #ind = np.where(img_final[:,wcrop:w_final-wcrop]==1.)
+            #img_final[ind,:] = 1.
+            img_final[h+20:h+hcrop,:] = 1.
             #-- save final image to file
             outfile = os.path.join(subdir,'%s_%s.png'%(filenames[i][:-4],threshold_str))
             scipy.misc.imsave(outfile, img_final)

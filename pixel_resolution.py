@@ -32,6 +32,6 @@ for glacier in glacier_list:
         print('y pixel size %f'%(dy/300.))
 
         if glacier == 'Helheim':
-            print('x error %f pixels'%(117.84/(dx/200.)))
-            print('y error %f pixels'%(117.84/(dy/300.)))
+            print('x error %f pixels'%(96.31/(dx/200.)))
+            print('y error %f pixels'%(96.31/(dy/300.)))
         print('\n')        

@@ -14,7 +14,7 @@ AUGMENT N
 AUG_CONFIG  3
 LINEAR  N
 FILTER  sobel
-imb_str 241.15   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
+imb_str 253.89   #-- imbalance string (from setting IMBALANCE RATIO = 0) added after model is run for post processing
 THRESHOLD       0.     #-- threshold for post-processing
 PLOT    N
 LABEL_WIDTH 1
