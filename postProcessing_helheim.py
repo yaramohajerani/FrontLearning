@@ -76,13 +76,13 @@ def obtainSceneCornersProjection(sceneID,glaciersFolder,glacier):
 def geoCoordsToImagePixels(coords,corners, projection, imageSize):
     coords=reprojectPolygon(coords,3413,projection)
     # fx(x,y) = ax + by + cxy + d
-    A=np.array([[corners[0],corners[1],corners[0]*corners[1],1], #lower left corner,
-               [corners[2],corners[3],corners[2]*corners[3],1], #lower right corner
-               [corners[4], corners[5], corners[4] * corners[5],1], #upper right corner
-               [corners[6], corners[7], corners[6] * corners[7],1]]) #upper left corner
+    A=np.array([[corners[6],corners[7],corners[6]*corners[7],1], #lower left corner,
+               [corners[4],corners[5],corners[4]*corners[5],1], #lower right corner
+               [corners[2], corners[3], corners[2] * corners[3],1], #upper right corner
+               [corners[0], corners[1], corners[0] * corners[1],1]]) #upper left corner
     #option 1
-    bx = np.array([[0],[imageSize[0]],[imageSize[0]],[0]])
-    by = np.array([[imageSize[1]],[imageSize[1]],[0], [0] ])
+    bx = np.array([[imageSize[0]],[0],[0],[imageSize[0]]])
+    by = np.array([[0],[0],[imageSize[1]], [imageSize[1]] ])
     Cx=np.dot(np.linalg.inv(A),bx)
 
     Cy = np.dot(np.linalg.inv(A), by)
@@ -242,13 +242,13 @@ def outputSolutionIndicesPng(imgArr,solutionIndices,outputFolder,label):
 def imagePixelsToGeoCoords(pixels, corners, projection, imageSize):
 
     # fx(x,y) = ax + by + cxy + d
-    A = np.array([[0, 0, 0 * 0, 1],  # lower left corner,
-                  [imageSize[0], 0, imageSize[0] * 0, 1],  # lower right corner
-                  [imageSize[0], imageSize[1], imageSize[0] * imageSize[1], 1],  # upper right corner
-                  [0, imageSize[1], 0 * imageSize[1], 1]])  # upper left corner
+    A = np.array([[imageSize[0], 0, imageSize[0] * 0, 1],  # lower left corner,
+                  [0, 0, 0 * 0, 1],  # lower right corner
+                  [0, imageSize[1], 0 * imageSize[1], 1],  # upper right corner
+                  [imageSize[0], imageSize[1], imageSize[0] * imageSize[1], 1]])  # upper left corner
     # option 1
-    bx = np.array([[corners[0]], [corners[2]], [corners[4]], [corners[6]]])
-    by = np.array([[corners[1]], [corners[3]], [corners[5]], [corners[7]]])
+    bx = np.array([[corners[6]], [corners[4]], [corners[2]], [corners[0]]])
+    by = np.array([[corners[7]], [corners[5]], [corners[3]], [corners[1]]])
     Cx = np.dot(np.linalg.inv(A), bx)
     Cy = np.dot(np.linalg.inv(A), by)
     geoCoords = []

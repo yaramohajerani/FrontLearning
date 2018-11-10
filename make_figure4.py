@@ -89,7 +89,7 @@ sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 #-- 4 layer standard
 ax[0,0].imshow(l4_noAug, cmap=plt.cm.gray)
 ax[0,0].set_title(r"$\bf{a)}$" + " No Augmentation", fontsize=10, color='navy')
-ax[0,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(361.26),
+ax[0,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(170.48),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,0].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -97,7 +97,7 @@ ax[0,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(361.26),
 #-- 4 layer aug x2
 ax[0,1].imshow(l4_augx2, cmap=plt.cm.gray)
 ax[0,1].set_title(r"$\bf{b)}$" + " Augmented:\nMirrored", fontsize=10, color='navy')
-ax[0,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(225.72),
+ax[0,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(117.84),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,1].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -105,7 +105,7 @@ ax[0,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(225.72),
 #-- 4 layer aug x3
 ax[0,2].imshow(l4_augx3, cmap=plt.cm.gray)
 ax[0,2].set_title(r"$\bf{c)}$" + " Augmented:\nMirrored & Inverted", fontsize=10, color='navy')
-ax[0,2].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(283.15),
+ax[0,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(119.75),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,2].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -113,7 +113,7 @@ ax[0,2].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(283.15),
 #-- 5 layer 
 ax[1,0].imshow(l5_noAug, cmap=plt.cm.gray)
 ax[1,0].set_title(r"$\bf{d)}$" + " 37 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(296.41),
+ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(139.59),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,0].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -121,7 +121,7 @@ ax[1,0].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(296.41),
 #-- 4 layer - 64 start 
 ax[1,1].imshow(l4_64, cmap=plt.cm.gray)
 ax[1,1].set_title(r"$\bf{e)}$" + " 29 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(358.39),
+ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(180.08),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -133,7 +133,7 @@ ax[1,1].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(358.39),
 #-- 4 layer 3 batches
 ax[1,2].imshow(l4_3b, cmap=plt.cm.gray)
 ax[1,2].set_title(r"$\bf{f)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,2].text(0.5, 0.1, r"$RMS=%i$ $m$"%np.rint(389.89),
+ax[1,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(204.81),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})

@@ -112,7 +112,7 @@ ax[3].plot([],[],color=rgb_to_name((0, 0, 255)),label='NN')
 ax[3].plot([],[],color=rgb_to_name((0, 255, 0)),label='Sobel')
 ax[3].plot([],[],color=rgb_to_name((255, 0, 0)),label='Manual')
 ax[3].plot([],[],color=rgb_to_name((0,255,255)),label='True Front')
-ax[3].legend(loc='upper right', bbox_to_anchor=(1.05, 0.5),fontsize=11)
+ax[3].legend(loc='upper right', bbox_to_anchor=(0.97, 0.5),fontsize=11)
 
 #fig.subplots_adjust(hspace=0)
 fig.tight_layout()

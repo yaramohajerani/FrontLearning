@@ -81,11 +81,13 @@ def main():
 
     pixelFolder['NN'] = os.path.join(results_dir,method,method+' Pixel CSVs '+str(step))
     pixelFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel Pixel CSVs '+str(step))
-    pixelFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Pixel CSVs '+str(step))
+    if 'Manual' in datasets:
+        pixelFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Pixel CSVs '+str(step))
 
     frontFolder['NN'] = os.path.join(results_dir,method,method+' Geo CSVs '+str(step))
     frontFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel Geo CSVs '+str(step))
-    frontFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Geo CSVs '+str(step))
+    if 'Manual' in datasets:
+        frontFolder['Manual'] = os.path.join(results_dir,'output_handrawn/output_handrawn Geo CSVs '+str(step))
 
     def seriesToNPoints(series,N):
         #find the total length of the series
@@ -122,19 +124,12 @@ def main():
         errors=[]
         for ff in range(len(front1)):
             dist=((front1[ff,0]-front2[ff,0])**2+(front1[ff,1]-front2[ff,1])**2)**0.5
-            if not np.isnan(dist):
-                errors.append(dist)
+            errors.append(dist)
         return(errors)
 
     def rmsError(error):
-        sum=0
-        denom=0
-        for e in error:
-            if not np.isnan(e):
-                sum+=e**2
-                denom+=1
-        RMS=(sum/denom)**0.5
-        return(RMS)
+        return(np.sqrt(np.mean(np.square(error))))
+
 
     def generateLabelList(labelFolder):
         labelList=[]
@@ -207,7 +202,8 @@ def main():
         frontImageFolder = {}
         frontImageFolder['NN'] = indir
         frontImageFolder['Sobel'] = os.path.join(results_dir,'Sobel/Sobel')
-        frontImageFolder['Manual'] = os.path.join(os.path.dirname(indir),'output_handrawn')
+        if 'Manual' in datasets:
+            frontImageFolder['Manual'] = os.path.join(os.path.dirname(indir),'output_handrawn')
 
         frontImage = {}
         pixels = {}
@@ -324,7 +320,8 @@ def main():
             plt.title('%s Errors Histogram'%d,fontsize=12)
             bins=range(0,5000,100)
             y[d], x[d], _ =plt.hist(errors[d],alpha=0.5,color=c,bins=bins,label='NN')
-            plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(errors[d]))+' m',fontsize=12)
+            #plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(errors[d]))+' m',fontsize=12)
+            plt.xlabel('Mean Diff. = '+'{0:.2f}'.format(np.mean(np.abs(errors[d])))+' m',fontsize=12)
 
             p += 1
 
@@ -347,7 +344,8 @@ def main():
         plt.title(r"$\bf{%s)}$"%lbl + " %s Error Histogram"%d,fontsize=12)
         bins=range(0,5000,100)
         y[d], x[d], _ =plt.hist(allerrors[d],alpha=0.5,color=c,bins=bins,label=d)
-        plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allerrors[d]))+' m',fontsize=12)
+        #plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allerrors[d]))+' m',fontsize=12)
+        plt.xlabel('Mean Difference = '+'{0:.2f}'.format(np.mean(np.abs(allerrors[d])))+' m',fontsize=12)
         if i==0:
             plt.ylabel('Count (100 m bins)',fontsize=12)
 

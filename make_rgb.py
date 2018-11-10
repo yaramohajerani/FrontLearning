@@ -35,13 +35,13 @@ def main():
     print(filenames)
     h,w = np.array(Image.open(in_list[0]).convert('L')).shape
 
-    outdir = os.path.join(os.path.dirname(indir),'output_handrawn')
+    outdir = os.path.join(os.path.dirname(indir),'output_handrawn_temp')
     #-- make output folder
     if (not os.path.isdir(outdir)):
         os.mkdir(outdir)
     else:
         sys.exit('Files alreay exist. Dont overwrite.')
-        
+
     #-- read files to fix dimensions are remove points dimmer than the threshold
     for i in range(n_files):
         img = Image.open(in_list[i])
