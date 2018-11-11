@@ -38,7 +38,7 @@ in_img_file = os.path.join(ddir,'images_equalize_autocontrast_smooth_edgeEnhance
     '%s_Subset.png'%prefix)
 in_img = np.array(Image.open(in_img_file).convert('L'))/255.
 
-cnn_out_file = os.path.join(ddir,'output_%ibatches_60epochs_4layers_32init_241.15weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px'%batch,\
+cnn_out_file = os.path.join(ddir,'output_%ibatches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped'%batch,\
     '%s_nothreshold.png'%prefix)
 cnn_out = np.array(Image.open(cnn_out_file).convert('L'))/255.
 
@@ -46,7 +46,7 @@ sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_ed
     '%s.png'%prefix)
 sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 
-post_procss_dir = 'output_10batches_60epochs_4layers_32init_241.15weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px'
+post_procss_dir = 'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped'
 cnn_p_file = os.path.join(main_dir,'Results','all_data2_test',post_procss_dir,post_procss_dir+' Post-Processed 50',\
     '%s_Solution.png'%prefix)
 cnn_p = np.array(Image.open(cnn_p_file).convert('L'))/255.

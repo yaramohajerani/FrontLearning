@@ -38,44 +38,40 @@ front = np.array(Image.open(front_file).convert('L'))/255.
 
 
 
-f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_noAug = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_241.15weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx2 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_241.15weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x3_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
 
-f = os.path.join(ddir,'output_10batches_100epochs_5layers_32init_253.89weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_60epochs_5layers_32init_86.60weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_3b = np.array(Image.open(f).convert('L'))/255.
 
-# f = os.path.join(ddir,'output_30batches_100epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
-#     '%s_nothreshold.png'%prefix)
-# l4_30b = np.array(Image.open(f).convert('L'))/255.
+f = os.path.join(ddir,'output_30batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+    '%s_nothreshold.png'%prefix)
+l4_30b = np.array(Image.open(f).convert('L'))/255.
 
-# f = os.path.join(ddir,'output_10batches_4layers_32init_1.00weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
-#     '%s_nothreshold.png'%prefix)
-# l4_noweight = np.array(Image.open(f).convert('L'))/255.
+f = os.path.join(ddir,'output_10batches_4layers_32init_1.00weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+    '%s_nothreshold.png'%prefix)
+l4_noweight = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_10batches_60epochs_4layers_64init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_60epochs_4layers_64init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
 l4_64 = np.array(Image.open(f).convert('L'))/255.
-
-f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
-    '%s_nothreshold.png'%prefix)
-l4_3pix = np.array(Image.open(f).convert('L'))/255.
 
 sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_edgeEnhance',\
     '%s.png'%prefix)
@@ -93,7 +89,7 @@ sobel_out = np.array(Image.open(sobel_out_file).convert('L'))/255.
 #-- 4 layer standard
 ax[0,0].imshow(l4_noAug, cmap=plt.cm.gray)
 ax[0,0].set_title(r"$\bf{a)}$" + " No Augmentation", fontsize=10, color='navy')
-ax[0,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(106.99),
+ax[0,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(170.48),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,0].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -101,7 +97,7 @@ ax[0,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(106.99),
 #-- 4 layer aug x2
 ax[0,1].imshow(l4_augx2, cmap=plt.cm.gray)
 ax[0,1].set_title(r"$\bf{b)}$" + " Augmented:\nMirrored", fontsize=10, color='navy')
-ax[0,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(96.31),
+ax[0,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(117.84),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,1].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -109,7 +105,7 @@ ax[0,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(96.31),
 #-- 4 layer aug x3
 ax[0,2].imshow(l4_augx3, cmap=plt.cm.gray)
 ax[0,2].set_title(r"$\bf{c)}$" + " Augmented:\nMirrored & Inverted", fontsize=10, color='navy')
-ax[0,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(137.88),
+ax[0,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(119.75),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[0,2].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
@@ -117,40 +113,30 @@ ax[0,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(137.88),
 #-- 5 layer 
 ax[1,0].imshow(l5_noAug, cmap=plt.cm.gray)
 ax[1,0].set_title(r"$\bf{d)}$" + " 37 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(112.00),
+ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(139.59),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,0].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
-# #-- 4 layer - 64 start 
-# ax[1,1].imshow(l4_64, cmap=plt.cm.gray)
-# ax[1,1].set_title(r"$\bf{e)}$" + " 29 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
-# ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(166.10),
-#         verticalalignment='bottom', horizontalalignment='center',
-#         transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
-#         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
-
-
-#-- 4 layer - 3 pixel label 
-ax[1,1].imshow(l4_3pix, cmap=plt.cm.gray)
-ax[1,1].set_title(r"$\bf{e)}$" + " 3-pixel Label\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(170.48),
+#-- 4 layer - 64 start 
+ax[1,1].imshow(l4_64, cmap=plt.cm.gray)
+ax[1,1].set_title(r"$\bf{e)}$" + " 29 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(180.08),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
-#-- 4 layer 3 batches
-ax[1,2].imshow(l4_3b, cmap=plt.cm.gray)
-ax[1,2].set_title(r"$\bf{f)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(206.74),
-        verticalalignment='bottom', horizontalalignment='center',
-        transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
-        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
-
-
 #-- 4 layer 30 batches
 #ax[2,0].imshow(l4_30b, cmap=plt.cm.gray)
 #ax[2,0].set_title(r"$\bf{g)}$" + " batch-size 30", fontsize=10, color='navy')
+
+#-- 4 layer 3 batches
+ax[1,2].imshow(l4_3b, cmap=plt.cm.gray)
+ax[1,2].set_title(r"$\bf{f)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(204.81),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 #-- 4 layer no weight
 #ax[1,2].imshow(l4_noweight, cmap=plt.cm.gray)
@@ -174,4 +160,4 @@ for i in range(2):
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5)
 #fig.tight_layout()
 #plt.show()
-plt.savefig(os.path.join(main_dir,'Figure_4.pdf'),format='pdf',dpi=300)
+plt.savefig(os.path.join(main_dir,'Figure_4_3px.pdf'),format='pdf',dpi=300)
