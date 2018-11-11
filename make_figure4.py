@@ -57,7 +57,7 @@ f = os.path.join(ddir,'output_10batches_100epochs_5layers_32init_253.89weight_w0
     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
-f = os.path.join(ddir,'output_3batches_60epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_3batches_30epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
     '%s_nothreshold.png'%prefix)
 l4_3b = np.array(Image.open(f).convert('L'))/255.
 
@@ -114,14 +114,30 @@ ax[0,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(137.88),
         transform=ax[0,2].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
-#-- 5 layer 
-ax[1,0].imshow(l5_noAug, cmap=plt.cm.gray)
-ax[1,0].set_title(r"$\bf{d)}$" + " 37 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(112.00),
+#-- 4 layer - 3 pixel label 
+ax[1,0].imshow(l4_3pix, cmap=plt.cm.gray)
+ax[1,0].set_title(r"$\bf{d)}$" + " 3-pixel Label\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(170.48),
         verticalalignment='bottom', horizontalalignment='center',
         transform=ax[1,0].transAxes,color='black', fontsize=10,style='normal',
         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
+
+#-- 4 layer 3 batches
+ax[1,1].imshow(l4_3b, cmap=plt.cm.gray)
+ax[1,1].set_title(r"$\bf{e)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(152.30),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
+
+#-- 5 layer 
+ax[1,2].imshow(l5_noAug, cmap=plt.cm.gray)
+ax[1,2].set_title(r"$\bf{f)}$" + " 37 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
+ax[1,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(112.00),
+        verticalalignment='bottom', horizontalalignment='center',
+        transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
+        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 # #-- 4 layer - 64 start 
 # ax[1,1].imshow(l4_64, cmap=plt.cm.gray)
 # ax[1,1].set_title(r"$\bf{e)}$" + " 29 Layers\nMax Channels 512\n(No Augmentation)", fontsize=10, color='navy')
@@ -131,21 +147,8 @@ ax[1,0].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(112.00),
 #         bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
 
-#-- 4 layer - 3 pixel label 
-ax[1,1].imshow(l4_3pix, cmap=plt.cm.gray)
-ax[1,1].set_title(r"$\bf{e)}$" + " 3-pixel Label\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,1].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(170.48),
-        verticalalignment='bottom', horizontalalignment='center',
-        transform=ax[1,1].transAxes,color='black', fontsize=10,style='normal',
-        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
 
-#-- 4 layer 3 batches
-ax[1,2].imshow(l4_3b, cmap=plt.cm.gray)
-ax[1,2].set_title(r"$\bf{f)}$" + " batch-size 3\n(No Augmentation)", fontsize=10, color='navy')
-ax[1,2].text(0.5, 0.1, r"$\epsilon=%i$ $m$"%np.rint(206.74),
-        verticalalignment='bottom', horizontalalignment='center',
-        transform=ax[1,2].transAxes,color='black', fontsize=10,style='normal',
-        bbox={'facecolor': 'wheat', 'alpha': 0.5, 'pad': 2, 'edgecolor': 'wheat'})
+
 
 
 #-- 4 layer 30 batches
