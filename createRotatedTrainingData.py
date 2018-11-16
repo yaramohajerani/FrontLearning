@@ -1,7 +1,7 @@
 u"""
 createRotatedTrainingData.py
 
-by Michael Wood (Last update 09/2018 by Yara Mohajerani)
+by Michael Wood (Last update 11/2018 by Yara Mohajerani)
 Create the rotated training data
 
 To run, specify the glaciers, coast, and image dimeions; e.g:
@@ -11,10 +11,12 @@ python createRotatedTrainingData.py --glaciers=Sverdrup,Jakobshavn
 "
 
 Update History
+    11/2018 Update directories
     09/2018 Clean up and add to pipline (Yara Mohajerani)
     04/2018 Written (Michael Wood)
 """
 import os
+import sys
 import getopt
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +38,7 @@ glacierRotationDefintion={('Sverdrup',32621):-144,
 
 #code to read in the sample area
 def readSampleArea(sampleAreaFolder,Glacier):
-    sampleArea=np.genfromtxt(sampleAreaFolder+'/'+Glacier+' Sample Area - ESPG 3413.csv',delimiter=',')
+    sampleArea=np.genfromtxt(os.path.join(sampleAreaFolder,Glacier+' Sample Area - ESPG 3413.csv'),delimiter=',')
     return sampleArea
 
 #change Julian day to month day
@@ -187,7 +189,7 @@ def getMapExtentFromFronts(frontList,frontFolder,sateliteImageryFolder,satellite
     minY = 1e22
     maxY = -1e22
     for frontFile in frontList:
-        front=np.genfromtxt(frontFolder+'/'+frontFile,delimiter=',')
+        front=np.genfromtxt(os.path.join(frontFolder,frontFile),delimiter=',')
         if np.min(front[:,0])<minX:
             minX=np.min(front[:,0])
         if np.max(front[:, 0]) > maxX:
@@ -196,7 +198,7 @@ def getMapExtentFromFronts(frontList,frontFolder,sateliteImageryFolder,satellite
             minY=np.min(front[:,1])
         if np.max(front[:, 1]) > maxY:
             maxY=np.max(front[:,1])
-    ds = gdal.Open(sateliteImageryFolder + '/' + satelliteImageFile)
+    ds = gdal.Open(os.path.join(sateliteImageryFolder,satelliteImageFile))
     prj = ds.GetProjection()
     srs = osr.SpatialReference(wkt=prj)
     prjName = srs.GetAttrValue('projcs')
@@ -433,7 +435,7 @@ def saveRotatedImage(outputFolder,outputFile,newSceneArray,newExtent):
     plt.close(fig)
 
 def saveRotatedFront(outputFolder,outputFile,imFolder,imFile,rotatedFront,extent,pix=3):
-    img=Image.open(imFolder+'/'+imFile)
+    img=Image.open(os.path.join(imFolder,imFile))
     w, h = img.size
     new_im=Image.new('RGB',(w,h),'white')
     pixelArr=np.array(new_im)
@@ -453,7 +455,7 @@ def saveRotatedFront(outputFolder,outputFile,imFolder,imFile,rotatedFront,extent
                 pixelArr[pY-1,pX+1,:] = 0
     frontIm=Image.fromarray(pixelArr)
     new_im.paste(frontIm)
-    new_im.save(outputFolder+'/'+outputFile)
+    new_im.save(os.path.join(outputFolder,outputFile))
 
 def plotBaseImagery(outputFolder,outputFile,sceneArray,extent,bigExtent,front):
     brightnessFactor=2.2
@@ -503,12 +505,12 @@ def main():
         #Steps in the process
         #############################################################################
         #Step 1: Read in the sample area for the glacier
-        sampleAreaFolder=os.path.join(main_dir,'Regions/'+coast+'/Glaciers/'+Glacier+'/Retreat/Sample Areas')
+        sampleAreaFolder=os.path.join(main_dir,'Regions',coast,'Glaciers',Glacier,'Retreat','Sample Areas')
         sampleArea=readSampleArea(sampleAreaFolder,Glacier)
 
         #Step 2: Get list of fronts and corresponding satellite images
-        frontsFolder=os.path.join(main_dir,'Regions/'+coast+'/Glaciers/'+Glacier+'/Retreat/Front Locations/3413')
-        satelliteImageryFolder=os.path.join(main_dir,'Greenland/Satellite Imagery/'+Glacier+'/Bands')
+        frontsFolder=os.path.join(main_dir,'Regions',coast,'Glaciers',Glacier,'Retreat','Front Locations','3413')
+        satelliteImageryFolder=os.path.join(main_dir,'Greenland','Satellite Imagery',Glacier,'Bands')
         frontList,imageList=frontAndImageLists(Glacier,frontsFolder,satelliteImageryFolder)
 
         outputFolder=os.path.join(main_dir,Glacier)
@@ -549,12 +551,12 @@ def main():
             newSceneArray, newExtent, rotatedFront, rotatedSampleArea, preservedCorners=rotateAndCut(sceneArrayX, sceneArrayY, sceneArray, rotationAngle,extent,front,sampleAreaCopy,imageDimensions)
 
             #save the results
-            saveRotatedImage(outputFolder + '/Small Images', outputFile, newSceneArray, newExtent)
+            saveRotatedImage(os.path.join(outputFolder,'Small Images'), outputFile, newSceneArray, newExtent)
             outputFile = satelliteImageFile[:-4] + '_Front.png'
             outputSAfile = satelliteImageFile[:-4] + '_SampleArea.png'
             imFile = satelliteImageFile[:-4] + '_Subset.png'
-            saveRotatedFront(outputFolder+'/Front Mask',outputFile,outputFolder+'/Small Images',imFile,rotatedFront,newExtent)
-            saveRotatedFront(outputFolder + '/Sample Areas', outputSAfile, outputFolder + '/Small Images', imFile, rotatedSampleArea,newExtent)
+            saveRotatedFront(os.path.join(outputFolder,'Front Mask'),outputFile,os.path.join(outputFolder,'Small Images'),imFile,rotatedFront,newExtent)
+            saveRotatedFront(os.path.join(outputFolder,'Sample Areas'), outputSAfile, os.path.join(outputFolder,'Small Images'), imFile, rotatedSampleArea,newExtent)
 
             metaDataOutput+=frontFile+','+satelliteImageFile+','+str(espg)+','+str(rotationAngle)+','
             metaDataOutput+=str(preservedCorners[0,0])+','+str(preservedCorners[0,1])+','+str(preservedCorners[1,0])+','+str(preservedCorners[1,1])
@@ -564,7 +566,7 @@ def main():
 
 
         #Step 4: Write out the meta data
-        f=open(outputFolder+'/'+Glacier+' Image Data.csv','w')
+        f=open(os.path.join(outputFolder,Glacier+' Image Data.csv'),'w')
         f.write(metaDataOutput[:-1])
         f.close()
 

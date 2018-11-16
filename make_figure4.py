@@ -53,16 +53,16 @@ f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_241.15weight_w0.
 l4_augx3 = np.array(Image.open(f).convert('L'))/255.
 
 
-# f = os.path.join(ddir,'output_10batches_100epochs_5layers_32init_253.89weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
-#     '%s_nothreshold.png'%prefix)
-f = os.path.join(ddir,'output_10batches_60epochs_5layers_32init_253.89weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_10batches_100epochs_5layers_32init_253.89weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
     '%s_nothreshold.png'%prefix)
+# f = os.path.join(ddir,'output_10batches_60epochs_5layers_32init_253.89weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+#     '%s_nothreshold.png'%prefix)
 l5_noAug = np.array(Image.open(f).convert('L'))/255.
 
-# f = os.path.join(ddir,'output_3batches_30epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
-#     '%s_nothreshold.png'%prefix)
-f = os.path.join(ddir,'output_3batches_30epochs_4layers_32init_241.15weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+f = os.path.join(ddir,'output_3batches_30epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
     '%s_nothreshold.png'%prefix)
+# f = os.path.join(ddir,'output_3batches_30epochs_4layers_32init_241.15weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
+#     '%s_nothreshold.png'%prefix)
 l4_3b = np.array(Image.open(f).convert('L'))/255.
 
 # f = os.path.join(ddir,'output_30batches_100epochs_4layers_32init_241.15weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped_1px',\
@@ -77,10 +77,10 @@ f = os.path.join(ddir,'output_10batches_60epochs_4layers_64init_241.15weight_w0.
     '%s_nothreshold.png'%prefix)
 l4_64 = np.array(Image.open(f).convert('L'))/255.
 
-# f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
-#     '%s_nothreshold.png'%prefix)
-f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+f = os.path.join(ddir,'output_10batches_100epochs_4layers_32init_82.22weight_w0.2drop_equalize_autocontrast_smooth_edgeEnhance_cropped',\
     '%s_nothreshold.png'%prefix)
+# f = os.path.join(ddir,'output_10batches_60epochs_4layers_32init_82.22weight_w0.2drop_augment-x2_equalize_autocontrast_smooth_edgeEnhance_cropped',\
+#     '%s_nothreshold.png'%prefix)
 l4_3pix = np.array(Image.open(f).convert('L'))/255.
 
 sobel_out_file = os.path.join(ddir,'output_sobel_equalize_autocontrast_smooth_edgeEnhance',\

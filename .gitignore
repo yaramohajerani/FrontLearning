@@ -1,8 +1,4 @@
-*.png
-*.npy
-*.h5
 *.zip
-*.pdf
 *.pyc
 *.DS_Store
 .vscode
