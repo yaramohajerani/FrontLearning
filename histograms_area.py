@@ -1,15 +1,15 @@
 #!/anaconda2/bin/python2.7
 u"""
-histograms.py
+histograms_area.py
 by Yara Mohajerani (Last Update 11/2018)
 Forked from CNNvsSobelHistogram.py by Michael Wood 
 
 find path of least resistance through an image and quantify errors
+Same as histograms.py but errors are calculated by integrating area between
+two fronts and dividing by length of true line.
 
 Update History
-    11/2018 - Forked from CNNvsSobelHistogram.py
-              Add option for manual comparison
-              make sure all the fronts are in the same order
+    11/2018 - Forked from histograms.py
 """
 
 import os
@@ -20,7 +20,7 @@ from matplotlib.ticker import FormatStrFormatter
 from PIL import Image
 import getopt
 import copy
-from shapely.geometry import LineString, shape
+from shapely.geometry import LineString, shape, Polygon
 
 
 #############################################################################################
@@ -129,10 +129,30 @@ def main():
 
     def frontComparisonErrors(front1,front2):
         errors=[]
-        for ff in range(len(front1)):
-            dist=((front1[ff,0]-front2[ff,0])**2+(front1[ff,1]-front2[ff,1])**2)**0.5
-            errors.append(dist)
-        return(errors)
+
+        polygon_points = [] #creates a empty list where we will append the points to create the polygon
+
+        for x,y in zip(front1[:,0],front1[:,1]):
+            polygon_points.append([x,y])
+
+        for x,y in zip(front2[::-1,0],front2[::-1,1]):
+            polygon_points.append([x,y])
+
+        #-- close the polygon
+        polygon_points.append([front1[0,0],front1[0,1]])
+
+        polygon = Polygon(polygon_points)
+        area = polygon.area
+
+        #-- get length of true line
+        length = 0
+        for ff in range(1,len(front1)):
+            length += ((front1[ff,0]-front1[ff-1,0])**2+\
+                (front1[ff,1]-front1[ff-1,1])**2)**0.5
+
+        errors = area/length
+
+        return([errors])
 
     def rmsError(error):
         return(np.sqrt(np.mean(np.square(error))))
@@ -304,11 +324,6 @@ def main():
             for error in errors[d]:
                 allerrors[d].append(error)
 
-        #-- plot fronts for debugging purposes -- double checking.
-        # plt.plot(trueFront[:,0],trueFront[:,1],label='True')
-        # plt.plot(front['NN'][:,0],front['NN'][:,1,],label='NN')
-        # plt.legend()
-        # plt.show()
 
         frontXmin = np.min(np.concatenate(([np.min(trueFront[:, 0])], [np.min(front[d][:,0]) for d in datasets])))
         frontXmax = np.max(np.concatenate(([np.max(trueFront[:, 0])], [np.max(front[d][:, 0]) for d in datasets])))
@@ -374,7 +389,7 @@ def main():
             plt.gca().set_xlim([0, np.max([x[d] for d in datasets])])
             p_temp += 1
 
-        plt.savefig(os.path.join(outputFolder, label + '.png'),bbox_inches='tight')
+        plt.savefig(os.path.join(outputFolder, label + '_AREA.png'),bbox_inches='tight')
         plt.close(fig)
 
     fig=plt.figure(figsize=(11,4))
@@ -397,7 +412,7 @@ def main():
         plt.gca().set_xlim([0,np.max([x[d] for d in datasets])])
 
     plt.savefig(os.path.join(results_dir,\
-        'Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size+'.pdf'),bbox_inches='tight')
+        'Figure_4_AREA_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size+'.pdf'),bbox_inches='tight')
     plt.close()
 
 if __name__ == '__main__':
