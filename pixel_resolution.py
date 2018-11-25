@@ -35,9 +35,9 @@ for glacier in glacier_list:
             print('x error %f pixels'%(96.31/(dx/200.)))
             print('y error %f pixels'%(96.31/(dy/300.)))
         elif glacier == 'Sverdrup':
-            print('x error %f pixels'%(142.66/(dx/200.)))
-            print('y error %f pixels'%(142.66/(dy/300.)))
+            print('x error %f pixels'%(143.24/(dx/200.)))
+            print('y error %f pixels'%(143.24/(dy/300.)))
         elif glacier == 'Kangerlussuaq':
-            print('x error %f pixels'%(108.05/(dx/200.)))
-            print('y error %f pixels'%(108.05/(dy/300.)))
+            print('x error %f pixels'%(181.71/(dx/200.)))
+            print('y error %f pixels'%(181.71/(dy/300.)))
         print('\n')        

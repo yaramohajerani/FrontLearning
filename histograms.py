@@ -8,6 +8,8 @@ find path of least resistance through an image and quantify errors
 
 Update History
     11/2018 - Forked from CNNvsSobelHistogram.py
+              Add option for manual comparison
+              make sure all the fronts are in the same order
 """
 
 import os
@@ -245,6 +247,11 @@ def main():
         #get the true front
         trueFrontFolder = os.path.join(glaciersFolder,glacier,'Front Locations','3413')
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
+        #-- make sure all fronts go in the same direction
+        #-- if the x axis is not in increasng order, reverse
+        if trueFront[0,0] > trueFront[-1,0]:
+            print('flipped true front.')
+            trueFront = trueFront[::-1,:]
         trueFront=seriesToNPoints(trueFront,n_interval)
         #-- get rid of poitns too close to the edges
         l1 = LineString(trueFront)
@@ -268,8 +275,13 @@ def main():
         for d in datasets:
             #get the front
             frontFile=glacier+' '+label+' Profile.csv'
-            front[d]=np.genfromtxt(os.path.join(frontFolder[d],frontFile),delimiter=',')
-            front[d]=seriesToNPoints(front[d],n_interval)
+            temp_front=np.genfromtxt(os.path.join(frontFolder[d],frontFile),delimiter=',')
+            #-- make sure all fronts go in the same direction
+            #-- if the x axis is not in increasng order, reverse
+            #if temp_front[0,0] > temp_front[-1,0]:
+            #    print('flipped %s'%d)
+            #    temp_front = temp_front[::-1,:]
+            front[d]=seriesToNPoints(temp_front,n_interval)
             #-- get rid of points to close to the edges
             #-- get rid of poitns too close to the edges
             l1 = LineString(front[d])
