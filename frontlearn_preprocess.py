@@ -59,7 +59,7 @@ def enhance_images(sharpness,contrast,glacier):
     outdir['train'] = os.path.join(trn_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
     outdir['test'] = os.path.join(tst_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
     #-- loop through train and test data
-    for t in ['train','test']:
+    for t in ['test']:#,'train']:
         if (not os.path.isdir(outdir[t])):
             os.mkdir(outdir[t])
         #-- loop through images and ehnance

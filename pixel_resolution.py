@@ -21,7 +21,7 @@ for glacier in glacier_list:
     infile = os.path.join(glaciersFolder,glacier,'%s Image Data.csv'%glacier)
     d = pd.read_csv(infile)
 
-    ind_list = [0,8] #np.arange(len(d['urX']))
+    ind_list = [0]#,8] #np.arange(len(d['urX']))
 
     for ind in ind_list:
 
@@ -34,4 +34,10 @@ for glacier in glacier_list:
         if glacier == 'Helheim':
             print('x error %f pixels'%(96.31/(dx/200.)))
             print('y error %f pixels'%(96.31/(dy/300.)))
+        elif glacier == 'Sverdrup':
+            print('x error %f pixels'%(142.66/(dx/200.)))
+            print('y error %f pixels'%(142.66/(dy/300.)))
+        elif glacier == 'Kangerlussuaq':
+            print('x error %f pixels'%(108.05/(dx/200.)))
+            print('y error %f pixels'%(108.05/(dy/300.)))
         print('\n')        

@@ -1,4 +1,4 @@
-GLACIER_NAME	Helheim_x2
+GLACIER_NAME	Jakobshavn_test
 EPOCHS	60
 BATCHES	10
 LAYERS_DOWN	4	#-- number of layers DOWNWARD, not the total # of convolution layers
@@ -18,4 +18,4 @@ imb_str 241.15   #-- imbalance string (from setting IMBALANCE RATIO = 0) added a
 THRESHOLD       0.     #-- threshold for post-processing
 PLOT    N
 LABEL_WIDTH 1
-MODEL_DIR   greenland_trainings
+MODEL_DIR   greenland_training

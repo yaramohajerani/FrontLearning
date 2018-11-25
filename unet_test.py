@@ -201,6 +201,7 @@ def train_model(parameters):
         im = image.array_to_img(img_final)
         #im = ImageOps.autocontrast(image.array_to_img(out_imgs[i]))
         out_name = '%s_%s.png'%((data['tst_names'][i].replace('_Subset',''))[:-4],threshold_str)
+        #out_name = '%s.png'%((data['tst_names'][i].replace('_Subset',''))[:-4])
         print(os.path.join(tst_dir,out_subdir,out_name)) 
         im.save(os.path.join(tst_dir,out_subdir,out_name))
 

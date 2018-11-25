@@ -69,12 +69,17 @@ def main():
     print('input directory ONLY for NN output:%s'%indir)
     print('METHOD:%s'%method)
 
-    outputFolder= os.path.join(results_dir,'Histograms',method+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size)
+    #-- make histohtam filder if it doesn't exist
+    histFolder = os.path.join(results_dir,'Histograms')
+    if (not os.path.isdir(histFolder)):
+        os.mkdir(histFolder)
+
+    outputFolder= os.path.join(histFolder,method+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size)
     #-- make output folders
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
 
-    datasets = ['NN','Sobel','Manual']
+    datasets = ['NN','Sobel']#,'Manual']
     
     pixelFolder = {}
     frontFolder = {}
@@ -134,8 +139,10 @@ def main():
     def generateLabelList(labelFolder):
         labelList=[]
         for fil in os.listdir(labelFolder):
-            if fil[-6:] == 'B8.png' or fil[-6:] == 'B2.png':
-                labelList.append(fil[:-4])
+            # if fil[-6:] == 'B8.png' or fil[-6:] == 'B2.png':
+            #     labelList.append(fil[:-4])
+            if fil.endswith('_nothreshold.png'):
+                labelList.append(fil.replace('_nothreshold.png',''))
         return(labelList)
 
     # get glacier names
@@ -243,7 +250,16 @@ def main():
         l1 = LineString(trueFront)
         int1 = l1.difference(buff[1])
         int2 = int1.difference(buff[2])
-        trueFront = np.array(shape(int2).coords)
+        try:
+            trueFront = np.array(shape(int2).coords)
+        except:
+            lengths = [len(np.array(shape(int2)[i].coords)) for i in range(len(shape(int2)))]
+            max_ind = np.argmax(lengths)
+            trueFront = np.array(shape(int2)[max_ind].coords)
+            #-- testing
+            print(lengths)
+            print(lengths[max_ind])
+
         #-- rebreak into n_interval segments
         trueFront=seriesToNPoints(trueFront,n_interval)
 
@@ -259,7 +275,16 @@ def main():
             l1 = LineString(front[d])
             int1 = l1.difference(buff[1])
             int2 = int1.difference(buff[2])
-            front[d] = np.array(shape(int2).coords)
+            try:
+                front[d] = np.array(shape(int2).coords)
+            except:
+                lengths = [len(np.array(shape(int2)[i].coords)) for i in range(len(shape(int2)))]
+                max_ind = np.argmax(lengths)
+                front[d] = np.array(shape(int2)[max_ind].coords)
+                #-- testing
+                print(lengths)
+                print(lengths[max_ind])
+
             #-- rebreak into n_interval segments
             front[d]=seriesToNPoints(front[d],n_interval)
 

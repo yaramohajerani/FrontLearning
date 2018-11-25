@@ -30,7 +30,7 @@ def load_data(suffix,ddir):
     #-- initialize dicttionaries
     images = {} 
     files = {}
-    for d in ['train','test']:
+    for d in ['test']:#,'train']:
         subdir = os.path.join(ddir[d],'images%s'%(suffix))
         #-- get a list of the input files
         file_list = glob(os.path.join(subdir,'*.png'))

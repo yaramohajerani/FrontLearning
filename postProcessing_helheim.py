@@ -30,14 +30,21 @@ from pyproj import Proj,transform
 #############################################################################################
 #############################################################################################
 
-#This function to make a list of the labels
-def generateLabelList(indir):
+#This function to make a list of the labels with threshold label
+def generateLabelList_threshold(indir):
+    labelList=[]
+    for fil in os.listdir(indir):
+        if fil.endswith('_nothreshold.png'):
+            labelList.append(fil.replace('_nothreshold.png',''))
+    return(labelList)
+
+#This function to make a list of the labels without threshold label
+def generateLabelList_sobel(indir):
     labelList=[]
     for fil in os.listdir(indir):
         if fil[-6:] == 'B8.png' or fil[-6:] == 'B2.png':
             labelList.append(fil[:-4])
     return(labelList)
-
 
 
 #############################################################################################
@@ -382,10 +389,14 @@ def main():
         os.mkdir(shapefileOutputFolder)
 
 
-    labelList=generateLabelList(indir)
+    if method == 'Sobel':
+        labelList=generateLabelList_sobel(indir)
+    else:
+        labelList=generateLabelList_threshold(indir)
     glacierList = getGlacierList(labelList,glaciersFolder)
 
     print(len(labelList))
+    print(len(glacierList))
 
     frontIndicesList=[]
     cornersList=[]
