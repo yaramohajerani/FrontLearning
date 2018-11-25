@@ -1,13 +1,14 @@
 #!/anaconda2/bin/python2.7
 u"""
 frontlearn_preprocess.py
-by Yara Mohajerani (Last update 09/2018)
+by Yara Mohajerani (Last update 11/2018)
 
 Pre-process input images to improve learning
 
 Update History
-        09/2018 Don't smooth
-        04/2018 Written
+    11/2018 Clean up
+    09/2018 Don't smooth
+    04/2018 Written
 """
 import os
 import sys
@@ -56,8 +57,8 @@ def enhance_images(sharpness,contrast,glacier):
     images,names = load_data(trn_dir,tst_dir)
     #-- make output directory dictionary
     outdir = {}
-    outdir['train'] = os.path.join(trn_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
-    outdir['test'] = os.path.join(tst_dir,'images_equalize_autocontrast_smooth_edgeEnhance')#'images_sharpness%.2f_contrast%.1f'%(sharpness,contrast))
+    outdir['train'] = os.path.join(trn_dir,'images_equalize_autocontrast_smooth_edgeEnhance')
+    outdir['test'] = os.path.join(tst_dir,'images_equalize_autocontrast_smooth_edgeEnhance')
     #-- loop through train and test data
     for t in ['test']:#,'train']:
         if (not os.path.isdir(outdir[t])):
@@ -75,11 +76,10 @@ def enhance_images(sharpness,contrast,glacier):
             im = contr_obj.enhance(contrast)
             final = im.filter(ImageFilter.SMOOTH)#.filter(ImageFilter.EDGE_ENHANCE)
             '''
-            #final = ImageOps.autocontrast(ImageOps.equalize(m.convert('L'))).filter(ImageFilter.SMOOTH).filter(ImageFilter.EDGE_ENHANCE)
+    
             final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.SMOOTH).filter(ImageFilter.EDGE_ENHANCE)
-            #final = ImageOps.equalize(ImageOps.autocontrast(m.convert('L'))).filter(ImageFilter.EDGE_ENHANCE)
 
-            #final = ImageOps.autocontrast(m.convert('L')).filter(ImageFilter.EDGE_ENHANCE)
+
             #-- write image to file
             final.save(os.path.join(outdir[t],'%s'%n))
 
@@ -91,7 +91,7 @@ def main():
 
     sharpness= 0.1
     contrast = 4
-    glacier = 'all_data'
+    glacier = 'greenland_training'
     for opt, arg in optlist:
         if opt in ('-S','--sharpness'):
             sharpness = np.float(arg)

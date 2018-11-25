@@ -11,7 +11,7 @@ python createRotatedTrainingData.py --glaciers=Sverdrup,Jakobshavn
 "
 
 Update History
-    11/2018 Update directories
+    11/2018 Update directories (Yara Mohajerani)
     09/2018 Clean up and add to pipline (Yara Mohajerani)
     04/2018 Written (Michael Wood)
 """
