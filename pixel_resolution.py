@@ -35,8 +35,8 @@ for glacier in glacier_list:
             print('x error %f pixels'%(96.31/(dx/200.)))
             print('y error %f pixels'%(96.31/(dy/300.)))
         elif glacier == 'Sverdrup':
-            print('x error %f pixels'%(143.24/(dx/200.)))
-            print('y error %f pixels'%(143.24/(dy/300.)))
+            print('x error %f pixels'%(137.61/(dx/200.)))
+            print('y error %f pixels'%(137.61/(dy/300.)))
         elif glacier == 'Kangerlussuaq':
             # 175.90 with 500m buffer but edges are mismatched because of weird boundary
             # so 700 buffer might be a fairer comparison
