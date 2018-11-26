@@ -154,22 +154,19 @@ def train_model(parameters):
                 n_init=n_init,n_layers=n_layers,drop=drop)
             print('importing unet_model_double_dropout')
 
-
-    #-- compile imported model
-    model.compile(loss='binary_crossentropy',optimizer='adam', metrics=['accuracy']\
-        ,sample_weight_mode="temporal")
-
     #-- checkpoint file
     chk_file = os.path.join(model_dir,'unet_model_weights_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s.h5'\
         %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width))
-    
+    print('model file:%s'%chk_file)
+
     #-- if file exists, read model from file
     if os.path.isfile(chk_file):
         print('Check point exists; loading model from file.')
         # load weights
         model.load_weights(chk_file)
+    else:
+        sys.exit('Model not found.')
 
-    print('model file:%s'%chk_file)
     print('Running on test data...')
 
    

@@ -28,8 +28,8 @@ from shapely.geometry import LineString, shape
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['subdir=','method=','step=','indir=','interval=','buffer=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:B:',long_options)
+    long_options = ['subdir=','method=','step=','indir=','interval=','buffer=','manual']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:B:m:',long_options)
 
     subdir= 'all_data2_test'
     method = ''
@@ -37,6 +37,7 @@ def main():
     n_interval = 1000
     buffer_size=500
     indir = ''
+    set_manual = False
     for opt, arg in optlist:
         if opt in ('-D','--subdir'):
             subdir = arg
@@ -50,6 +51,8 @@ def main():
             buffer_size = np.int(arg)
         elif opt in ('-I','--indir'):
             indir = os.path.expanduser(arg)
+        elif opt in ('-m','--manual'):
+            set_manual = True
 
     #-- directory setup
     #- current directory
@@ -81,7 +84,12 @@ def main():
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
 
-    datasets = ['NN','Sobel']#,'Manual']
+    if set_manual:
+        datasets = ['NN','Sobel','Manual']
+    else:
+        datasets = ['NN','Sobel']
+
+    print(datasets)
     
     pixelFolder = {}
     frontFolder = {}
@@ -249,7 +257,7 @@ def main():
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
         #-- make sure all fronts go in the same direction
         #-- if the x axis is not in increasng order, reverse
-        if trueFront[0,0] > trueFront[-1,0]:
+        if trueFront[0,0] > trueFront[-1,0] and glacier!='Helheim':
             print('flipped true front.')
             trueFront = trueFront[::-1,:]
         trueFront=seriesToNPoints(trueFront,n_interval)

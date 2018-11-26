@@ -8,6 +8,9 @@ find path of least resistance through an image and quantify errors
 Same as histograms.py but errors are calculated by integrating area between
 two fronts and dividing by length of true line.
 
+NOTE: needs to be updated, as areas below curve are given as negative. we need total
+    absolute area.
+
 Update History
     11/2018 - Forked from histograms.py
 """
@@ -28,8 +31,8 @@ from shapely.geometry import LineString, shape, Polygon
 #-- main function to get user input and make training data
 def main():
     #-- Read the system arguments listed after the program
-    long_options = ['subdir=','method=','step=','indir=','interval=','buffer=']
-    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:B:',long_options)
+    long_options = ['subdir=','method=','step=','indir=','interval=','buffer=','manual']
+    optlist,arglist = getopt.getopt(sys.argv[1:],'=D:M:S:I:V:B:m:',long_options)
 
     subdir= 'all_data2_test'
     method = ''
@@ -37,6 +40,7 @@ def main():
     n_interval = 1000
     buffer_size=500
     indir = ''
+    set_manual = False
     for opt, arg in optlist:
         if opt in ('-D','--subdir'):
             subdir = arg
@@ -50,6 +54,8 @@ def main():
             buffer_size = np.int(arg)
         elif opt in ('-I','--indir'):
             indir = os.path.expanduser(arg)
+        elif opt in ('-m','--manual'):
+            set_manual = True
 
     #-- directory setup
     #- current directory
@@ -81,7 +87,12 @@ def main():
     if (not os.path.isdir(outputFolder)):
         os.mkdir(outputFolder)
 
-    datasets = ['NN','Sobel']#,'Manual']
+    if set_manual:
+        datasets = ['NN','Sobel','Manual']
+    else:
+        datasets = ['NN','Sobel']
+
+    print(datasets)
     
     pixelFolder = {}
     frontFolder = {}
@@ -269,7 +280,7 @@ def main():
         trueFront=np.genfromtxt(trueFrontFolder+'/'+trueFrontFile,delimiter=',')
         #-- make sure all fronts go in the same direction
         #-- if the x axis is not in increasng order, reverse
-        if trueFront[0,0] > trueFront[-1,0]:
+        if trueFront[0,0] > trueFront[-1,0] and glacier!='Helheim':
             print('flipped true front.')
             trueFront = trueFront[::-1,:]
         trueFront=seriesToNPoints(trueFront,n_interval)
