@@ -1,12 +1,14 @@
 # Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case Study
-
-Scripts, training data, and trained networks. DOI: 
+## Yara Mohajerani, Michael Wood, Isabella Velicogna, and Eric Rignot
+### doi.org/10.3390/rs11010074
 
 For questions contact <ymohajer@uci.edu>.
 
+Scripts, training data, and trained networks. 
+
 Training data and the trained networks presented in the paper are available in the `data` directory.
 
-**Note** The provided scripts assume all data is located in ```Frontlearning_data```, which should be placed in the same directory as the folder containing this repository (not *inside* the directory containing the scripts, instead the code and data folders should be separate but both in the same directory).
+**Note** The provided scripts assume all data is located in ```Frontlearning_data```, which should be placed in the same directory as the folder containing this repository (not *inside* the directory containing the scripts, instead the code and data directories should be in the same parent directory).
 
 The training data has already been rotated and pre-processed. The rotation is done by 
 `createRotatedTrainingData.py`
@@ -19,6 +21,8 @@ python createRotatedTrainingData.py --glaciers=Sverdrup,Jakobshavn --coasts=NW,C
 
 python frontlearn_preprocess.py --glacier=greenland_training
 ```
+Note that the rotation script assumes the raw input data is separated by coasts in the ```Regions``` directory.
+
 The class imbalance and training time can also be improved by cropping, using a parameter file for the configuration:
 ```
 python crop_input.py parameters_frontlearn_allData_UNET.txt
@@ -42,7 +46,7 @@ python crop_input.py parameters_frontlearn_allData_UNET.txt
 Finally, in order to extract the calving fronts from the NN output, use the postProcessing script, ```postProcessing.py```.
 Note that for Helheim (test results in the paper) we have a custom script but the input format is indentical in either case.
 ```
-python postProcessing_helheim.py ---subdir='helheim_test' --step=50 --indir=[path to NN output]
+python postProcessing_helheim.py --subdir='helheim_test' --step=50 --indir=[path to NN output]
 ```
 Note that ```indir``` specifies the full path to the directory containing the output of the NN (produced by ```crop_output.py```), while ```subdir``` specifiese the output directory name under 
 ```FrontLearning_data/Results```. ```step``` corresponds to the interval size along the boundaries while searching for the path of least resistance.
