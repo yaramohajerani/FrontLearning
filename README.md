@@ -1,9 +1,9 @@
 # Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case Study
-## Yara Mohajerani, Michael Wood, Isabella Velicogna, and Eric Rignot
-### doi.org/10.3390/rs11010074
-
-For questions contact <ymohajer@uci.edu>.
-
+***
+> ### Please Cite: Mohajerani, Y.; Wood, M.; Velicogna, I.; Rignot, E. Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case Study. Remote Sens. 2019, 11, 74. doi:10.3390/rs11010074
+***
+#### Publication Link: https://doi.org/10.3390/rs11010074  | For questions contact <ymohajer@uci.edu>.
+***
 Scripts, training data, and trained networks. 
 
 Training data and the trained networks presented in the paper are available in the `data` directory.
