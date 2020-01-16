@@ -23,7 +23,11 @@ import sys
 import keras
 import tensorflow as tf
 from keras.layers.normalization import BatchNormalization
+import os
+import imp
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+BilinearUpsampling = imp.load_source('BilinearUpsampling', os.path.join(current_dir,'..','keras-deeplab-v3-plus','model_cfm_dual_wide_x65.py'))
 
 #---------------------------------------------------------------------------------------
 #-- linearly scale the size of each convolution layer (i.e. initial*i for the ith layer)
@@ -124,11 +128,12 @@ def unet_model_double_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     up = {}
     print('Max Number of Convlution Filters: ',n_filts)
     while count>1:
-        n_filts /= 2
+        n_filts = int(n_filts/2)
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
         #-- concatenating along the color channels
         upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[count])
+        # upsampled_c[i] = BilinearUpsampling.BilinearUpsampling(upsampling=(2,2))(c[count])
         up[i] = kl.concatenate([upsampled_c[i],c[count-1]],axis=3)
         #-- now do a convlution with the merged upsampled layer
         i += 1
