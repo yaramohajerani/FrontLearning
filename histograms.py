@@ -198,7 +198,9 @@ def main():
     labelList=generateLabelList(indir)
     glacierList=getGlacierList(labelList)
     frontList=getFrontList(glacierList,labelList)
-
+    print(labelList)
+    print(glacierList)
+    print(frontList)
     allerrors = {}
     allerrors['NN']=[]
     allerrors['Sobel']=[]
@@ -389,6 +391,7 @@ def main():
 
     x = {}
     y = {}
+    """
     for i,d,c,lbl in zip(range(len(datasets)),datasets,['b','g','r'],['e','f','g']):
         plt.subplot(1,len(datasets),i+1)
         plt.title(r"$\bf{%s)}$"%lbl + " %s Error Histogram"%d,fontsize=12)
@@ -403,6 +406,20 @@ def main():
         plt.subplot(1,len(datasets),i+1)
         plt.gca().set_ylim([0,np.max([y[d] for d in datasets])])
         plt.gca().set_xlim([0,np.max([x[d] for d in datasets])])
+    """
+    d = 'NN'
+    c = 'blue'
+    # plt.subplot(1,len(datasets),i+1)
+    plt.title("Helheim inter-comparison: segment-pair distances",fontsize=12)
+    bins=range(0,1000,100)
+    y[d], x[d], _ =plt.hist(allerrors[d],alpha=0.5,color=c,bins=bins,label=d)
+    #plt.xlabel('RMS Error = '+'{0:.2f}'.format(rmsError(allerrors[d]))+' m',fontsize=12)
+    plt.xlabel('Segment-Pair Distances (m) \nMean Difference = '+'{0:.2f}'.format(np.mean(np.abs(allerrors[d])))+' m',fontsize=12)
+    plt.ylabel('Count (100 m bins)',fontsize=12)
+
+    # plt.subplot(1,len(datasets),i+1)
+    plt.gca().set_ylim([0,np.max(y[d])+200])
+    plt.gca().set_xlim([-50,1050])
 
     plt.savefig(os.path.join(results_dir,\
         'Figure_4_'+'_'.join(method.split())+'_'+str(step)+'_%isegs'%n_interval+'_%ibuffer'%buffer_size+'.pdf'),bbox_inches='tight')

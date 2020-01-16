@@ -75,13 +75,7 @@ def unet_model_linear_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     print('Number of Convlution Filters at the end of up segment: ',n_init*count)
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
-    c[i] = kl.Conv2D(3,3,activation='relu',padding='same')(c[i-1])
-    #-- do one final sigmoid convolution into just 1 final channel (None,h,w,1)
-    i += 1
-    c[i] = kl.Conv2D(1,1,activation='sigmoid')(c[i-1])
-    #-- reshape into a flattened output to match sample weights
-    i += 1
-    c[i] = kl.Reshape((height*width,1,))(c[i-1])
+    c[i] = kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1])
     print 'output shape: ', c[i].shape
     print('Total Number of layers: ',i)
 
@@ -148,13 +142,7 @@ def unet_model_double_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     print('Number of Convlution Filters at the end of up segment: ',n_filts)
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
-    c[i] = kl.Conv2D(3,3,activation='relu',padding='same')(c[i-1])
-    #-- do one final sigmoid convolution into just 1 final channel (None,h,w,1)
-    i += 1
-    c[i] = kl.Conv2D(1,1,activation='sigmoid')(c[i-1])
-    #-- reshape into a flattened output to match sample weights
-    i += 1
-    c[i] = kl.Reshape((height*width,1,))(c[i-1])
+    c[i] = kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1])
     print 'output shape: ', c[i].shape
     print('Total Number of layers: ',i)
 
@@ -214,13 +202,7 @@ def unet_model_linear_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     print('Number of Convlution Filters at the end of up segment: ',n_init*count)
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
-    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(3,3,activation='relu',padding='same')(c[i-1]))
-    #-- do one final sigmoid convolution into just 1 final channel (None,h,w,1)
-    i += 1
-    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(1,1,activation='sigmoid')(c[i-1]))
-    #-- reshape into a flattened output to match sample weights
-    i += 1
-    c[i] = kl.Reshape((height*width,1,))(c[i-1])
+    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1]))
     print 'output shape: ', c[i].shape
     print('Total Number of layers: ',i)
 
@@ -282,13 +264,7 @@ def unet_model_double_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     print('Number of Convlution Filters at the end of up segment: ',n_filts)
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
-    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(3,3,activation='relu',padding='same')(c[i-1]))
-    #-- do one final sigmoid convolution into just 1 final channel (None,h,w,1)
-    i += 1
-    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(1,1,activation='sigmoid')(c[i-1]))
-    #-- reshape into a flattened output to match sample weights
-    i += 1
-    c[i] = kl.Reshape((height*width,1,))(c[i-1])
+    c[i] = BatchNormalization(axis=-1)(kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1]))
     print 'output shape: ', c[i].shape
     print('Total Number of layers: ',i)
 
