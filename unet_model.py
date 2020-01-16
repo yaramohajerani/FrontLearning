@@ -76,7 +76,7 @@ def unet_model_linear_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
     c[i] = kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
     #-- make model
@@ -143,7 +143,7 @@ def unet_model_double_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
     c[i] = kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
 
@@ -203,7 +203,7 @@ def unet_model_linear_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
     c[i] = BatchNormalization(axis=-1)(kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1]))
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
     #-- make model
@@ -265,7 +265,7 @@ def unet_model_double_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     #-- convlution across the last n_iniy filters into 3 channels
     i += 1
     c[i] = BatchNormalization(axis=-1)(kl.Conv2D(2,3,activation='sigmoid',padding='same')(c[i-1]))
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
 
