@@ -61,7 +61,7 @@ def unet_model_linear_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
         #-- concatenating along the color channels
-        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[count])
+        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[i])
         up[i] = kl.concatenate([upsampled_c[i],c[count-1]],axis=3)
         #-- now do a convolution with the merged upsampled layer
         i += 1
@@ -82,7 +82,7 @@ def unet_model_linear_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     #-- reshape into a flattened output to match sample weights
     i += 1
     c[i] = kl.Reshape((height*width,1,))(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
     #-- make model
@@ -130,11 +130,11 @@ def unet_model_double_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     up = {}
     print('Max Number of Convlution Filters: ',n_filts)
     while count>1:
-        n_filts /= 2
+        n_filts = int(n_filts/2)
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
         #-- concatenating along the color channels
-        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[count])
+        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[i])
         up[i] = kl.concatenate([upsampled_c[i],c[count-1]],axis=3)
         #-- now do a convlution with the merged upsampled layer
         i += 1
@@ -155,7 +155,7 @@ def unet_model_double_dropout(height=0,width=0,channels=1,n_init=12,n_layers=2,d
     #-- reshape into a flattened output to match sample weights
     i += 1
     c[i] = kl.Reshape((height*width,1,))(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
 
@@ -202,7 +202,7 @@ def unet_model_linear_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
         #-- concatenating along the color channels
-        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[count])
+        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[i])
         up[i] = kl.concatenate([upsampled_c[i],c[count-1]],axis=3)
         #-- now do a convolution with the merged upsampled layer
         i += 1
@@ -221,7 +221,7 @@ def unet_model_linear_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     #-- reshape into a flattened output to match sample weights
     i += 1
     c[i] = kl.Reshape((height*width,1,))(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
     #-- make model
@@ -266,11 +266,11 @@ def unet_model_double_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     up = {}
     print('Max Number of Convlution Filters: ',n_filts)
     while count>1:
-        n_filts /= 2
+        n_filts = int(n_filts/2)
         #-- concatenate the 1st convolution layer with an upsampled 2nd layer
         #-- where the missing elements in the 2nd layer are padded with 0
         #-- concatenating along the color channels
-        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[count])
+        upsampled_c[i] = kl.UpSampling2D(size=(2,2))(c[i])
         up[i] = kl.concatenate([upsampled_c[i],c[count-1]],axis=3)
         #-- now do a convlution with the merged upsampled layer
         i += 1
@@ -289,7 +289,7 @@ def unet_model_double_normalized(height=0,width=0,channels=1,n_init=12,n_layers=
     #-- reshape into a flattened output to match sample weights
     i += 1
     c[i] = kl.Reshape((height*width,1,))(c[i-1])
-    print 'output shape: ', c[i].shape
+    print('output shape: ', c[i].shape)
     print('Total Number of layers: ',i)
 
 
