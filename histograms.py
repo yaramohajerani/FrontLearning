@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 histograms.py
 by Yara Mohajerani (Last Update 11/2018)

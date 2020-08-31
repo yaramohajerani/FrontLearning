@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 unet_test.py
 by Yara Mohajerani (Last Update 11/2018)

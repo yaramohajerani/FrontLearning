@@ -35,8 +35,8 @@ def main():
     threshold_str = 'nothreshold'
 
     #-- get a list of the input files
-    in_list = sorted([fn for fn in glob(os.path.join(indir,'*png'))
-        if (not os.path.basename(fn).endswith('postprocess.png') and not os.path.basename(fn).endswith('threshold.png'))])
+    in_list = sorted([fn for fn in glob(os.path.join(indir,'*png'))\
+		if (not os.path.basename(fn).endswith('postprocess.png') and not os.path.basename(fn).endswith('threshold.png'))])
     n_files = len(in_list)
     filenames = [os.path.basename(i) for i in in_list]
     print(filenames)

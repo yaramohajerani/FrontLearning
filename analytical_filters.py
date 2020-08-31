@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 analytical_filters.py
 by Yara Mohajerani (Last Update 09/2018)

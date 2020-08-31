@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 geocode_labels.py
 by Yara Mohajerani 11/2018

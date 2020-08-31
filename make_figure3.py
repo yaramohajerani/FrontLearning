@@ -77,14 +77,6 @@ out_image[ind2] = 0.3
 ind1 = np.where(cnn_p==0.)
 out_image[ind1] = 0.5
 
-
-print np.count_nonzero(out_image==0.1)
-print np.count_nonzero(out_image==0.3)
-print np.count_nonzero(out_image==0.5)
-print np.count_nonzero(out_image==0.7)
-print np.count_nonzero(out_image==0.9)
-
-
 ax[0].imshow(in_img, cmap=plt.cm.gray)
 ax[0].axes.get_xaxis().set_ticks([])
 ax[0].axes.get_yaxis().set_ticks([])

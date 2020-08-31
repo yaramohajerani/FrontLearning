@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 unet_train.py
 by Yara Mohajerani (Last Update 10/2018)
@@ -18,7 +17,7 @@ Update History
     05/2018 Forked from frontlearn_train.py
 """
 import matplotlib
-matplotlib.use('Agg') #-- noninteractive backend for GP
+matplotlib.use('Agg') #-- noninteractive backend
 import os
 import numpy as np
 import keras
@@ -119,7 +118,7 @@ def set_ratio(lbls):
     white_tot = 0
     black_tot = 0
     tot_size = lbls.shape[1]
-    print 'total size =  ', lbls.shape[1]
+    print('total size =  ', lbls.shape[1])
     for i in range(len(lbls)):
         white_count = np.count_nonzero(lbls[i])
         white_tot += white_count
@@ -140,8 +139,8 @@ def set_weights(lbls,ratio):
         ind = np.nonzero(lbls[i] == 0.)
         w[i][ind] *= ratio
 
-    print 'weight: ', ratio
-    print 'weight shape: ', w.shape
+    print('weight: ', ratio)
+    print('weight shape: ', w.shape)
     return w
 
 #-- train model and make predictions
@@ -322,9 +321,7 @@ def train_model(parameters):
     #-- Now test the model on both the test data and the train data
     for t in ['test','train']:
         out_imgs = model.predict(in_img[t], batch_size=1, verbose=1)
-        print out_imgs.shape
         out_imgs = out_imgs.reshape(out_imgs.shape[0],height,width,out_imgs.shape[2])
-        print out_imgs.shape
         #-- make output directory
         out_subdir = 'output_%ibatches_%iepochs_%ilayers_%iinit%s%s%s%s%s%s%s%s'\
             %(n_batch,n_epochs,n_layers,n_init,lin_str,imb_str,drop_str,norm_str,aug_str,suffix,crop_str,lbl_width)
@@ -333,7 +330,7 @@ def train_model(parameters):
         #-- save the test image
         for i in range(len(out_imgs)):
             im = image.array_to_img(out_imgs[i])
-            print os.path.join(outdir[t],out_subdir,'%s'%names[t][i].replace('_Subset','')) 
+            print(os.path.join(outdir[t],out_subdir,'%s'%names[t][i].replace('_Subset',''))) 
             im.save(os.path.join(outdir[t],out_subdir,'%s'%names[t][i].replace('_Subset','')))
 
 #-- main function to get parameters and pass them along to fitting function

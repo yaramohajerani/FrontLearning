@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 postProcessing.py
 by Michael Wood (Last Updated by Yara Mohajerani 10/2018)
