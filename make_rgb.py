@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 make_rgb.py
 by Yara Mohajerani (Last update 11/2018)

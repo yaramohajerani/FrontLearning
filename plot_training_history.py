@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 plot_training_history.py
 by Yara Mohajerani (Last Update 10/2018)

@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 crop_output.py
 by Yara Mohajerani (last update 10/2018)

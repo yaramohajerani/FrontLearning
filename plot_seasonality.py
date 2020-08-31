@@ -1,4 +1,3 @@
-#!/anaconda2/bin/python2.7
 u"""
 plot_seasonality.py
 by Yara Mohajerani (12/2018)
