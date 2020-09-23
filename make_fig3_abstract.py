@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 make_figure3_abstract.py
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 analytical_filters.py
 by Yara Mohajerani (Last Update 09/2018)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 crop_output.py
 by Yara Mohajerani (last update 10/2018)

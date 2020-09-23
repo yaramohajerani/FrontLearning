@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 unet_test.py
 by Yara Mohajerani (Last Update 11/2018)

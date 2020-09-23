@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 histograms.py
 by Yara Mohajerani (Last Update 11/2018)

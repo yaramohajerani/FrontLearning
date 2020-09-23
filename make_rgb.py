@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 make_rgb.py
 by Yara Mohajerani (Last update 11/2018)

@@ -1,4 +1,4 @@
-#!/anaconda2/bin/python2.7
+#!/usr/bin/env python
 u"""
 crop_input.py
 by Yara Mohajerani (Last update 10/2018)

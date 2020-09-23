@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 histograms_area.py
 by Yara Mohajerani (Last Update 11/2018)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 plot_training_history.py
 by Yara Mohajerani (Last Update 10/2018)

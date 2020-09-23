@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 frontlearn_preprocess.py
 by Yara Mohajerani (Last update 11/2018)

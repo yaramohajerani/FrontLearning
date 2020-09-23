@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 plot_seasonality.py
 by Yara Mohajerani (12/2018)

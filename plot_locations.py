@@ -1,4 +1,4 @@
-#!/anaconda2/bin/python2.7
+#!/usr/bin/env python
 u"""
 plot_locations.py
 by Yara Mohajerani (12/2018)

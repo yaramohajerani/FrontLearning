@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 u"""
 extrct_handrawn.py
 by Yara Mohajerani (11/2018)
