@@ -16,6 +16,7 @@ Training data and the trained networks presented in the paper are available in t
 
 **Note** The provided scripts assume all data is located in ```Frontlearning_data```, which should be placed in the same directory as the folder containing this repository (not *inside* the directory containing the scripts, instead the code and data directories should be in the same parent directory).
 
+---
 For a list of Python dependencies or creating a Conda environment, please refer to `requirements.txt` or `frontlearning_env.yml`.
 
 ## Pre-processing
