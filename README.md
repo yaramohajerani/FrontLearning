@@ -2,6 +2,7 @@ Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case 
 ====================
 
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/yaramohajerani/FrontLearning/blob/master/LICENSE)
+[![DOI](https://zenodo.org/badge/128992682.svg)](https://zenodo.org/badge/latestdoi/128992682)
 
 This repository includes the scripts, training data, and trained networks presented in [Mohajerani et al. (2019)](https://doi.org/10.3390/rs11010074). 
 
@@ -9,6 +10,11 @@ This repository includes the scripts, training data, and trained networks presen
 Please cite:
 ```
 Mohajerani, Y.; Wood, M.; Velicogna, I.; Rignot, E. Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case Study. Remote Sens. 2019, 11, 74. doi:10.3390/rs11010074
+```
+
+The latest release of this repository is also deposited on Zenodo and should be cited as:
+```
+Yara Mohajerani. (2020, September 23). yaramohajerani/FrontLearning: Zenodo Release (Version v1.1). Zenodo. http://doi.org/10.5281/zenodo.4044770
 ```
 
 ## Data
