@@ -6,6 +6,10 @@ Detection of Glacier Calving Margins with Convolutional Neural Networks: A Case 
 
 This repository includes the scripts, training data, and trained networks presented in [Mohajerani et al. (2019)](https://doi.org/10.3390/rs11010074). 
 
+![](./remotesensing-11-00074-ag.png)
+Overview of the neural network and sample results comparing the neural network, manual, and analytical (Sobel) filter performances, from [Mohajerani et al. (2019)](https://doi.org/10.3390/rs11010074).
+
+
 ## Citation
 Please cite:
 ```
