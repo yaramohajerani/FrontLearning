@@ -70,7 +70,6 @@ dependencies:
   - conda-package-handling=1.6.1=py37h1de35cc_0
   - conda-verify=3.4.2=py_1
   - contextlib2=0.6.0.post1=py_0
-  - cryptography=3.1=py37hddc9c9b_0
   - curl=7.67.0=ha441bb4_0
   - cycler=0.10.0=py37_0
   - cython=0.29.21=py37hb1e8313_0
