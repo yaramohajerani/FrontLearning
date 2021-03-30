@@ -336,7 +336,6 @@ dependencies:
   - requests=2.24.0=py_0
   - ripgrep=11.0.2=he32d670_0
   - rope=0.17.0=py_0
-  - rpy2=2.9.4=py37r36h1d22016_0
   - rtree=0.9.4=py37_1
   - ruamel_yaml=0.15.87=py37haf1e3a3_1
   - scikit-image=0.15.0=py37h0a44026_0
@@ -368,7 +367,6 @@ dependencies:
   - spyder-kernels=1.9.4=py37_0
   - sqlalchemy=1.3.19=py37haf1e3a3_0
   - sqlite=3.33.0=hffcf06c_0
-  - statsmodels=0.10.1=py37h1d22016_0
   - sympy=1.6.2=py37_0
   - tapi=1000.10.8=ha1b3eb9_0
   - tbb=2020.3=h879752b_0
@@ -440,7 +438,6 @@ dependencies:
     - pyskeleton==0.3.6
     - python-graphviz==0.14
     - requests-oauthlib==1.3.0
-    - rsa==4.0
     - scipy==1.4.1
     - tensorboard==2.1.1
     - tensorflow==2.1.0
